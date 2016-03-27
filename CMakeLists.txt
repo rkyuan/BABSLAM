@@ -32,7 +32,7 @@ catkin_simple()
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
 
- #cs_add_executable(convert_twist src/convert_twist.cpp)
+ cs_add_executable(babs_slam src/babs_slam.cpp)
  #cs_add_executable(odom src/odom.cpp)
  #cs_add_executable(simple_commander src/simple_commander.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
