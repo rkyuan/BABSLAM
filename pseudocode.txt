@@ -19,6 +19,14 @@ zMax = 8 // max possible LIDAR measurement value
 maxX = 10000
 maxY = 10000
 mapThresh = 0.5 // min occupancy probability to consider a cell occupied
+priorOcc = 0.5 // map occupancy value by default
+// inverse sensor model parameters
+ismAlpha = 2 // thickness of obstackes
+ismBeta = ... // width of the sensor beam
+l0 = 0
+lOcc = 999
+lFree =  -999
+
 
 class Map {
 	float map[maxX][maxY] //log odds representation
@@ -186,6 +194,19 @@ float raycast(z, zAngle, pose, map) {
 	return trueZ;
 }
 
-Map updateMap(Measurement measurement, Pose newPose, Map map) {
+
+// table 9.1 from the book
+Map updateMap(Measurement measurement, Pose pose, Map map) {
+	for all i,j {
+		if i,j is in the LIDAR measurement cone:
+			priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7
+			map[i][j] = map[i][j] + inverseSensorModel(i,j,measurement,pose) - priorLogOdds;
+	}
+	return map
+}
+
+// table 9.2 from the book
+// Computes the change in each map cell
+float inverseSensorModel(int x, int y, Measurement measurement, Pose pose) {
 	
 }
