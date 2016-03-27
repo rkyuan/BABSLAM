@@ -1,0 +1,161 @@
+// Parameters
+// a1..a6 - motion model parameters, higher->more noise
+a1 = 0
+a2 = 0
+a3 = 0
+a4 = 0
+a5 = 0
+a6 = 0
+// measurement model parameters (for LIDAR)
+// Table 6.2 shows how to get them using MLE, but can also estimate them by hand from some data
+// To get data can get 10000 measurements with known true distance (probably just use the forward facing ray to ignore angles)
+zHit = 1
+zShort = 0
+zMax = 0
+zRand = 0
+stdHit = 0
+aShort = 0
+zMax = 8 // max possible LIDAR measurement value
+
+class Map {
+	map[maxX][maxY] //initial map, all values are 0.5 initially
+	
+	void mapToImage(filename); //saves the map as an image, not required for algorithm but needed for us to see the map
+}
+
+class Pose {
+	int x, y;
+	float theta;
+}
+
+class Control {
+	float v; // translational velocity
+	float w; // rotational velocity (positive -> counterclockwise/left turn)
+	float dT; // how much time passed (in seconds)
+}
+
+class Measurement {
+	int type
+	float[] values
+}
+
+class Particle {
+	Pose pose;
+	Map map;
+	
+	Pose getPose() {}
+	Map getMap() {}
+}
+
+// Table 13.4 from the book
+// Applies control and measurement to a set of particles to produce a new set of particles
+Particle[] fastSLAM(Particle[] particles, Control control, Measurement measurement) {
+	Particle[] newParticles = [] // before resampling
+	float[] particleWeights = [] // for particle weights
+	Particle[] result = [] // after resampling
+	// Iterate over particles
+	for (i=0;i<particles.size;i++) {
+		// Extract info from the particle
+		Particle particle = particles[i] // position + map
+		Pose pose = particle.getPose()
+		Map map = particle.getMap()
+		// Use motion model to calculate new position given the control
+		Pose newPose = sampleMotionModel(pose, control)
+		// Use measurement model to define particle weights (how likely is it)
+		Float weight = measurementModelMap(measurement, newPose, map)
+		// Update map given new pose and the measurement
+		Map newMap = updateMap(measurement, newPose, map)
+		// Create a new particle and add it to the array with the weight
+		Particle newParticle = Particle(newPose, newMap)
+		result.append(newParticle)
+		particleWeights.append(particleWeight)
+	}
+	for (i=0;i<newParticles.size;i++) {
+		draw particle from particles array using weights from particleWeights (particleWeights is not normalized by default)
+		result.append(particle)
+	}
+	return result
+}
+
+// Table 5.3 from the book
+// Samples a pose from the motion model given previous pose and control
+Pose sampleMotionModel(Pose pose, Control control) {
+	// Add noise to the initial pose
+	v = control.v + sample_normal(a1*control.v^2 + a2*control.w^2)
+	w = control.v + sample_normal(a3*control.v^2 + a4*control.w^2)
+	// Calculate the final pose
+	gamma = sample_normal(a5*control.v^2 + a6*control.w^2)
+	newX = pose.x - (v/w)*sin(pose.theta) + (v/w)*sin(theta + w*control.dT)
+	newY = pose.y + (v/w)*cos(pose.theta) + (v/w)*cos(theta + w*control.dT)
+	newTheta = pose.theta + w*pose.dT + gamma*pose.dT
+	return new Pose(newX, newY, newTheta)
+}
+
+// Table 5.4 from the book
+float sample_normal(bSquared) {
+	float b = sqrt(bSquared)
+	result = 0
+	for (i=1;i<=12;i++) {
+		result += rand(-b,b)
+	}
+	return 0.5*result
+}
+
+// Table 6.1 from the book for LIDAR
+// Not sure about other sensors. We could probably just use Gaussians to model it.
+float measurementModelMap(Measurement mt, Pose pose, Map map) {
+	switch(type) {
+		case TYPE_LIDAR:
+			float result = 1
+			for (i=0;i<len(mt);i++) {
+				z = mt.values[i]
+				trueZ = raycast(z, zAngle, pose, map)
+				prob = zHit*pHit(z, trueZ)
+				prob += zShort*pShort(z, trueZ)
+				prob += zMax*pMax(z)
+				prob += zRand*pRand(z)
+				result = result*prob
+			}
+			return result
+	}
+}
+
+// eq 6.4-6.6 form the book
+float pHit(float z, float trueZ) {
+	if (z<0 || z>zMax)
+		return 0;
+	gaussianProb = (1/sqrt(2*pi*stdHit^2))*exp(-0.5*(z-trueZ)^2/(stdHit^2));
+	normalizer = ?? // Probably need to calculate the integral, shouldn't be that bad
+	return gaussianProb*normalizer;
+}
+
+// eq 6.7-6.9 from the book
+float pShort(float z, float trueZ) {
+	if (z<0 || z>zMax)
+		return 0;
+	expProb = aShort*exp(-aShort*z)
+	normalizer = 1/(1-exp(-aShort*trueZ))
+}
+
+// eq 6.10 from the book
+float pMax(float z) {
+	if (z==zMax)
+		return 1
+	return 0
+}
+
+// eq 6.11 from the book
+float pRand(float z) {
+	if (z<0 || z>zMax)
+		return 0;
+	return 1/zMax;
+}
+
+// compute trueZ using ray casting (hopefully there are libraries for that)
+float raycast(z, zAngle, pose, map) {
+	...
+	return trueZ;
+}
+
+Map updateMap(Measurement measurement, Pose newPose, Map map) {
+}
