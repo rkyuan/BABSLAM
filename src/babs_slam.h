@@ -5,6 +5,7 @@
 #include <geometry_msgs/Pose.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <std_msgs/Float64.h> 
 #include <math.h>
 #include <vector>
 
@@ -34,7 +35,10 @@ private:
 	void updateMap();
 	void resample(std::vector<float> weights);
 
-
+	static void encoder_callback(const std_msgs::Float64& message_holder);
+	static void imu_callback(const std_msgs::Float64& message_holder);
+	static void gps_callback(const std_msgs::Float64& message_holder);
+	static void lidar_callback(const std_msgs::Float64& message_holder);
 
 	//TODO use a timer or something instead of hard coding
 	double dt = 0.1;// time since last running of SLAM,

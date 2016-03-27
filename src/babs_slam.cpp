@@ -121,6 +121,21 @@ void babs_slam::resample(std::vector<float> weights){
 	particles = newParticles;
 }
 
+
+void babs_slam::encoder_callback(const std_msgs::Float64& message_holder){
+
+}
+void babs_slam::imu_callback(const std_msgs::Float64& message_holder){
+	
+}
+void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
+	
+}
+void babs_slam::lidar_callback(const std_msgs::Float64& message_holder){
+	
+}
+
+
 int main(int argc, char** argv) 
 {
     
