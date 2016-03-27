@@ -1,11 +1,10 @@
 // Parameters
-// a1..a6 - motion model parameters, higher->more noise
-a1 = 0
-a2 = 0
-a3 = 0
-a4 = 0
-a5 = 0
-a6 = 0
+// motion model parameters, higher->more noise
+motionParamsEnc = [0,0,0,0,0,0]
+motionParamsIMU = [0,0,0,0,0,0]
+wEnc = 0.5 // weights for taking average
+wIMU = 0.5
+
 // measurement model parameters (for LIDAR)
 // Table 6.2 shows how to get them using MLE, but can also estimate them by hand from some data
 // To get data can get 10000 measurements with known true distance (probably just use the forward facing ray to ignore angles)
@@ -16,9 +15,37 @@ zRand = 0
 stdHit = 0
 aShort = 0
 zMax = 8 // max possible LIDAR measurement value
+// Map parameters
+maxX = 10000
+maxY = 10000
+mapThresh = 0.5 // min occupancy probability to consider a cell occupied
 
 class Map {
-	map[maxX][maxY] //initial map, all values are 0.5 initially
+	float map[maxX][maxY] //log odds representation
+	
+	//convert the map to probability representation
+	float[][] getProb() {
+		result = float[maxX][maxY];
+		for every i,j {
+			// eq 9.6
+			result[i][j] = 1 - 1/(1+exp(map[i][j]));
+		}
+		return result;
+	}
+	
+	//convert the map to occupancy grid, 1=occupied, 0=unoccupied
+	int[][] sampleMap()  {
+		result = int[maxX][maxY];
+		prob = getProb()
+		for every i,j {
+			// eq 9.6
+			if (prob[i][j] > mapThresh)
+				result[i][j]=1;
+			else
+				result[i][j]=0;
+		}
+		return result;
+	}
 	
 	void mapToImage(filename); //saves the map as an image, not required for algorithm but needed for us to see the map
 }
@@ -49,7 +76,7 @@ class Particle {
 
 // Table 13.4 from the book
 // Applies control and measurement to a set of particles to produce a new set of particles
-Particle[] fastSLAM(Particle[] particles, Control control, Measurement measurement) {
+Particle[] fastSLAM(Particle[] particles, Control controlEnc, Control controlIMU Measurement measurement) {
 	Particle[] newParticles = [] // before resampling
 	float[] particleWeights = [] // for particle weights
 	Particle[] result = [] // after resampling
@@ -60,7 +87,9 @@ Particle[] fastSLAM(Particle[] particles, Control control, Measurement measureme
 		Pose pose = particle.getPose()
 		Map map = particle.getMap()
 		// Use motion model to calculate new position given the control
-		Pose newPose = sampleMotionModel(pose, control)
+		Pose newPoseEnc = sampleMotionModel(pose, controlEnc, motionParamsEnc)
+		Pose newPoseIMU = sampleMotionModel(pose, controlIMU, motionParamsIMU)
+		Poer newPose = weighted_avg (newPoseEnc, newPoseIMU, wEnc, wIMU)
 		// Use measurement model to define particle weights (how likely is it)
 		Float weight = measurementModelMap(measurement, newPose, map)
 		// Update map given new pose and the measurement
@@ -79,12 +108,12 @@ Particle[] fastSLAM(Particle[] particles, Control control, Measurement measureme
 
 // Table 5.3 from the book
 // Samples a pose from the motion model given previous pose and control
-Pose sampleMotionModel(Pose pose, Control control) {
+Pose sampleMotionModel(Pose pose, Control control, Array[6] params) {
 	// Add noise to the initial pose
-	v = control.v + sample_normal(a1*control.v^2 + a2*control.w^2)
-	w = control.v + sample_normal(a3*control.v^2 + a4*control.w^2)
+	v = control.v + sample_normal(params[0]*control.v^2 + params[1]*control.w^2)
+	w = control.v + sample_normal(params[2]*control.v^2 + params[3]*control.w^2)
 	// Calculate the final pose
-	gamma = sample_normal(a5*control.v^2 + a6*control.w^2)
+	gamma = sample_normal(params[4]*control.v^2 + params[5]*control.w^2)
 	newX = pose.x - (v/w)*sin(pose.theta) + (v/w)*sin(theta + w*control.dT)
 	newY = pose.y + (v/w)*cos(pose.theta) + (v/w)*cos(theta + w*control.dT)
 	newTheta = pose.theta + w*pose.dT + gamma*pose.dT
@@ -158,4 +187,5 @@ float raycast(z, zAngle, pose, map) {
 }
 
 Map updateMap(Measurement measurement, Pose newPose, Map map) {
+	
 }
