@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>babs_slam</name>
+  <name>BABSLAM</name>
   <version>0.0.0</version>
   <description>The BABSLAM package</description>
   
