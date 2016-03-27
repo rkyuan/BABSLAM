@@ -3,7 +3,11 @@
 
 babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 { // constructor
-    
+    ros::Subscriber encoder_listener= nh_.subscribe("encoder_topic",1,encoder_callback);
+    ros::Subscriber imu_listener= nh_.subscribe("imu_topic",1,imu_callback);
+    ros::Subscriber gps_listener= nh_.subscribe("gps_topic",1,gps_callback);
+    ros::Subscriber lidar_listener= nh_.subscribe("lidar_topic",1,lidar_callback);
+
 }
 
 void babs_slam::update(){
