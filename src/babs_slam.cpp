@@ -3,10 +3,7 @@
 
 babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 { // constructor
-    ros::Subscriber encoder_listener= nh_.subscribe("encoder_topic",1,encoder_callback);
-    ros::Subscriber imu_listener= nh_.subscribe("imu_topic",1,imu_callback);
-    ros::Subscriber gps_listener= nh_.subscribe("gps_topic",1,gps_callback);
-    ros::Subscriber lidar_listener= nh_.subscribe("lidar_topic",1,lidar_callback);
+
 
 }
 
@@ -94,6 +91,39 @@ void babs_slam::updateMap(){
 
 }
 
+//// table 9.2 from the book
+//// Computes the change in each map cell
+////
+//// x and y reference the cell of interest in the occupancy grid.
+//// Measurement is the entire lidar scan
+//// Pose is the Pose of the robot
+//float inverseSensorModel(int x, int y, Measurement mt, Pose pose) {
+//	// Get the center of the cell
+//	float x = cellX + 0.5;
+//	float y = cellY + 0.5;
+//	// Get distance and angle of (cell-pose) vector
+//	float r = sqrt((x-pose.x)^2+(y-pose.y)^2);
+//	float phi = atan2(x-pose.x, y-pose.y) - pose.theta
+//	// Find the closest ray
+//	minAngle = 99999
+//	k = 0
+//	for (i=0; i<len(mt.values); i++) {
+//		float angle = getAngle(pose, i);
+//		if (angle < minAngle) {
+//			minAngle = angle;
+//			k = i;
+//		}
+//	}
+//	z = mt.values[k]
+//	// Change cell occupancy depending on the measurement and cell coordinates
+//	if (r > min(zMax, z+ismAlpha/2) || abs(phi-minAngle)>ismBeta/2)
+//		return l0;
+//	if (z<zMax && abs(r-z)<ismAlpha/2)
+//		return lOcc;
+//	return lFree;
+//}
+
+
 void babs_slam::resample(std::vector<float> weights){
 	float total_weight = 0;
 	for (int i = 0; i < NUMPARTICLES; i ++){
@@ -122,32 +152,71 @@ void babs_slam::resample(std::vector<float> weights){
 }
 
 
-void babs_slam::encoder_callback(const std_msgs::Float64& message_holder){
+void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
+
+	double x = odom_value.pose.pose.position.x;
+	double y = odom_value.pose.pose.position.y;
+
+	//TODO do something with the odom values
+	ROS_INFO("x,y from odom: %f, %f", x,y);
 
 }
 void babs_slam::imu_callback(const std_msgs::Float64& message_holder){
-	
+
 }
 void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
-	
+
 }
-void babs_slam::lidar_callback(const std_msgs::Float64& message_holder){
-	
+void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
+
+	float angle_min = laser_scan.angle_min;
+	float angle_max = laser_scan.angle_max;
+	float angle_increment = laser_scan.angle_increment;
+	float time_increment = laser_scan.time_increment;
+	float scan_time = laser_scan.scan_time;
+	float range_min = laser_scan.range_min;
+	float range_max = laser_scan.range_max;
+	//laser_scan.ranges;
+	//laser_scan.intensities;
+
+	ROS_INFO("angle_min = %f", angle_min);
+	ROS_INFO("angle_max = %f", angle_max);
+	ROS_INFO("angle_increment = %f", angle_increment);
+	ROS_INFO("time_increment = %f", time_increment);
+	ROS_INFO("scan_time = %f", scan_time);
+	ROS_INFO("range_min = %f", range_min);
+	ROS_INFO("range_max = %f", range_max);
+
+
+
 }
 
 
 int main(int argc, char** argv) 
 {
-    
 
-    ros::init(argc, argv, "babs_slam"); 
 
-    ros::NodeHandle nh; 
+	ros::init(argc, argv, "babs_slam");
 
-    
-    babs_slam babs(&nh); 
+	ros::NodeHandle nh_;
 
-    
-    ros::spin();
-    return 0;
+	babs_slam babs(&nh_);
+
+	ROS_INFO("initializing subscribers");
+	ros::Subscriber encoder_listener= nh_.subscribe("/odom",1,babs_slam::encoder_callback);
+	ros::Subscriber imu_listener= nh_.subscribe("imu_topic",1,babs_slam::imu_callback);
+	ros::Subscriber gps_listener= nh_.subscribe("gps_topic",1,babs_slam::gps_callback);
+	ros::Subscriber lidar_listener= nh_.subscribe("/scan",1,babs_slam::lidar_callback);
+
+
+	ros::spin();
+	return 0;
+
+
+
+	//create a Subscriber object and have it subscribe to the lidar topic
+	//ros::Subscriber lidar_subscriber = nh.subscribe("/scan", 1, laserCallback);
+
+
+
 } 

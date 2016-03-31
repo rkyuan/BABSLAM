@@ -6,6 +6,7 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float64.h> 
+#include <sensor_msgs/LaserScan.h>
 #include <math.h>
 #include <vector>
 
@@ -14,6 +15,14 @@ class babs_slam
 {
 public:
 	babs_slam(ros::NodeHandle* nodehandle);
+
+	static void encoder_callback(const nav_msgs::Odometry& odom_value);
+	static void lidar_callback(const sensor_msgs::LaserScan& laser_scan);
+
+
+	//TODO implement callbacks for these with correct message types
+	static void imu_callback(const std_msgs::Float64& message_holder);
+	static void gps_callback(const std_msgs::Float64& message_holder);
 
 
 private:
@@ -35,10 +44,7 @@ private:
 	void updateMap();
 	void resample(std::vector<float> weights);
 
-	static void encoder_callback(const std_msgs::Float64& message_holder);
-	static void imu_callback(const std_msgs::Float64& message_holder);
-	static void gps_callback(const std_msgs::Float64& message_holder);
-	static void lidar_callback(const std_msgs::Float64& message_holder);
+
 
 	//TODO use a timer or something instead of hard coding
 	double dt = 0.1;// time since last running of SLAM,
