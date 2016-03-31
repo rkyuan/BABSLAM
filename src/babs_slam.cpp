@@ -121,6 +121,45 @@ void babs_slam::resample(std::vector<float> weights){
 	particles = newParticles;
 }
 
+// Sensor model probabilities
+
+// eq 6.4-6.6 form the book
+float babs_slam::pHit(float z, float trueZ) {
+	if (z<0 || z>MAX_LIDAR_RANGE)
+		return 0;
+	float gaussianProb = (1/sqrt(2*M_PI*pow(STD_HIT,2)))*exp(-0.5*pow((z-trueZ),2)/pow(STD_HIT,2));
+	float normalizer = 1; // Supposed to be an integral, but it only matters when measured value is close to min or max
+	return gaussianProb*normalizer;
+}
+
+// eq 6.7-6.9 from the book
+float babs_slam::pShort(float z, float trueZ) {
+	if (z<0 || z>trueZ || z>MAX_LIDAR_RANGE)
+		return 0;
+	float expProb = L_SHORT*exp(-L_SHORT*z);
+	float normalizer = 1/(1-exp(-L_SHORT*trueZ));
+	return expProb*normalizer;
+}
+
+// eq 6.10 from the book
+float babs_slam::pMax(float z) {
+	if (babs_slam::compareFloats(z, MAX_LIDAR_RANGE))
+		return 1;
+	return 0;
+}
+
+// eq 6.11 from the book
+float babs_slam::pRand(float z) {
+	if (z<0 || z>MAX_LIDAR_RANGE)
+		return 0;
+	return 1/MAX_LIDAR_RANGE;
+}
+
+bool babs_slam::compareFloats(float a, float b) {
+	if (fabs(a-b) < 0.001)
+		return true;
+	return false;
+}
 
 void babs_slam::encoder_callback(const std_msgs::Float64& message_holder){
 
@@ -146,7 +185,16 @@ int main(int argc, char** argv)
 
     
     babs_slam babs(&nh); 
-
+	/*
+	// Sensor model testing code
+	for (float i=0; i<11; i+=0.05) {
+		float phit = babs.pHit(i,5);
+		float pshort = babs.pShort(i, 5);
+		float pmax = babs.pMax(i);
+		float prand = babs.pRand(i);
+		ROS_INFO("i=%f, phit=%f, pshort=%f, pmax=%f, prand=%f",i,phit, pshort,pmax,prand);
+	}
+	*/
     
     ros::spin();
     return 0;
