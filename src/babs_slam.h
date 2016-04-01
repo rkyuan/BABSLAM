@@ -11,6 +11,11 @@
 #include <vector>
 
 
+struct particle{
+	geometry_msgs::Pose pose;
+	nav_msgs::OccupancyGrid map;
+};
+
 class babs_slam
 {
 public:
@@ -35,11 +40,17 @@ private:
 	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
 	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
 
-	static const int NUMPARTICLES = 500;
+	
 	ros::NodeHandle nh_;
-	std::vector<geometry_msgs::Pose> particles;
+	std::vector<particle> particles;
 	nav_msgs::OccupancyGrid map;
+	nav_msgs::Odometry last_odom;
+	sensor_msgs::LaserScan last_scan;
+	
 
+
+
+	const int NUMPARTICLES = 500;
 	// Measurement model parameters
 	const float Z_HIT = 1;
 	const float Z_SHORT = 0;
@@ -50,9 +61,10 @@ private:
 	const float MAX_LIDAR_RANGE = 8.1;
 
 	void update();
-	geometry_msgs::Pose sampleMotionModel(geometry_msgs::Pose p);
 	float measurementModelMap(geometry_msgs::Pose p);
-	void updateMap(/*const sensor_msgs::LaserScan& laser_scan, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid& map*/);
+
+	void updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/);
+
 	void resample(std::vector<float> weights);
 
 
