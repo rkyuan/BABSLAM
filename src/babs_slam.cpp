@@ -87,9 +87,16 @@ float babs_slam::measurementModelMap(geometry_msgs::Pose p){
 	return 0.0;
 }
 
-void babs_slam::updateMap(){
-
+// table 9.1 from the book
+void babs_slam::updateMap(/*const sensor_msgs::LaserScan& laser_scan, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid& map*/){
+//	for all i,j {
+//			if i,j is in the LIDAR measurement cone:
+//				priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7
+//				map[i][j] = map[i][j] + inverseSensorModel(i,j,measurement,pose) - priorLogOdds;
+//		}
+//		return map
 }
+
 
 //// table 9.2 from the book
 //// Computes the change in each map cell

@@ -52,7 +52,7 @@ private:
 	void update();
 	geometry_msgs::Pose sampleMotionModel(geometry_msgs::Pose p);
 	float measurementModelMap(geometry_msgs::Pose p);
-	void updateMap();
+	void updateMap(/*const sensor_msgs::LaserScan& laser_scan, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid& map*/);
 	void resample(std::vector<float> weights);
 
 
