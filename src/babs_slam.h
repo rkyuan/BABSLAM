@@ -7,6 +7,7 @@
 #include <nav_msgs/OccupancyGrid.h>
 #include <std_msgs/Float64.h> 
 #include <sensor_msgs/LaserScan.h>
+#include <sensor_msgs/Imu.h>
 #include <math.h>
 #include <vector>
 
@@ -21,12 +22,7 @@ class babs_slam
 public:
 	babs_slam(ros::NodeHandle* nodehandle);
 
-	static void encoder_callback(const nav_msgs::Odometry& odom_value);
-	static void lidar_callback(const sensor_msgs::LaserScan& laser_scan);
-
-	//TODO implement callbacks for these with correct message types
-	static void imu_callback(const std_msgs::Float64& message_holder);
-	static void gps_callback(const std_msgs::Float64& message_holder);
+	
 
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
@@ -46,7 +42,13 @@ private:
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::Odometry last_odom;
 	sensor_msgs::LaserScan last_scan;
-	
+	sensor_msgs::Imu last_imu;
+
+	ros::Subscriber encoder_listener;
+	ros::Subscriber imu_listener;
+	ros::Subscriber gps_listener;
+	ros::Subscriber lidar_listener;
+
 
 
 
@@ -60,10 +62,19 @@ private:
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
 
+	void initializeSubscribers();
 	void update();
 	float measurementModelMap(geometry_msgs::Pose p);
 	void updateMap(particle p);
 	void resample(std::vector<float> weights);
+
+
+	void encoder_callback(const nav_msgs::Odometry& odom_value);
+	void lidar_callback(const sensor_msgs::LaserScan& laser_scan);
+
+	//TODO implement callbacks for these with correct message types
+	void imu_callback(const sensor_msgs::Imu& imu_data);
+	void gps_callback(const std_msgs::Float64& message_holder);
 
 
 

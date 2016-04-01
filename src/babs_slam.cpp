@@ -5,6 +5,16 @@ babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 { // constructor
 
 
+	ROS_INFO("initializing subscribers");
+	initializeSubscribers();
+	
+
+}
+void babs_slam::initializeSubscribers(){
+	encoder_listener= nh_.subscribe("/odom",1,&babs_slam::encoder_callback,this);
+	imu_listener= nh_.subscribe("/imu",1,&babs_slam::imu_callback,this);
+	gps_listener= nh_.subscribe("gps_topic",1,&babs_slam::gps_callback,this);
+	lidar_listener= nh_.subscribe("/scan",1,&babs_slam::lidar_callback,this);
 }
 
 // Table 5.3 from the book
@@ -204,17 +214,23 @@ void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
 	double x = odom_value.pose.pose.position.x;
 	double y = odom_value.pose.pose.position.y;
 
+	last_odom = odom_value;
+
 	//TODO do something with the odom values
 	ROS_INFO("x,y from odom: %f, %f", x,y);
 
 }
-void babs_slam::imu_callback(const std_msgs::Float64& message_holder){
+void babs_slam::imu_callback(const sensor_msgs::Imu& imu_data){
+
+	last_imu = imu_data;
 
 }
 void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
 
 }
 void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
+
+	last_scan = last_scan;
 
 	float angle_min = laser_scan.angle_min;
 	float angle_max = laser_scan.angle_max;
@@ -249,11 +265,7 @@ int main(int argc, char** argv)
 
 	babs_slam babs(&nh_);
 
-	ROS_INFO("initializing subscribers");
-	ros::Subscriber encoder_listener= nh_.subscribe("/odom",1,babs_slam::encoder_callback);
-	ros::Subscriber imu_listener= nh_.subscribe("/imu",1,babs_slam::imu_callback);
-	ros::Subscriber gps_listener= nh_.subscribe("gps_topic",1,babs_slam::gps_callback);
-	ros::Subscriber lidar_listener= nh_.subscribe("/scan",1,babs_slam::lidar_callback);
+	
 
 	/*
 	// Sensor model testing code
