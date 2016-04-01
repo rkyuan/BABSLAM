@@ -65,7 +65,9 @@ private:
 	void initializeSubscribers();
 	void update();
 	float measurementModelMap(geometry_msgs::Pose p);
-	void updateMap(particle p);
+
+	void updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/);
+
 	void resample(std::vector<float> weights);
 
 
