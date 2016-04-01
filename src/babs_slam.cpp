@@ -63,34 +63,42 @@ geometry_msgs::Quaternion babs_slam::convertPlanarPhi2Quaternion(double phi) {
 }
 
 void babs_slam::update(){
-	std::vector<geometry_msgs::Pose> newParticles;
+	//std::vector<geometry_msgs::Pose> newParticles;
 	std::vector<float> particleWeights;
 	//result will update particles
 	for (int i = 0; i < particles.size();i++){
-		geometry_msgs::Pose p = particles[i];
+		geometry_msgs::Pose p = particles[i].pose;
 		//get new particles
-		geometry_msgs::Pose newpose = sampleMotionModel(p);
+		geometry_msgs::Pose newpose;
+		//geometry_msgs::Pose newpose = sampleMotionModel(p);
 		//weigh particles
 		particleWeights.push_back(measurementModelMap(newpose));
-		updateMap();
+		updateMap(particles[i]);
 	}
-	particles=newParticles;
+	//particles=newParticles;
 	resample(particleWeights);
-}
-
-geometry_msgs::Pose babs_slam::sampleMotionModel(geometry_msgs::Pose p){
-
-	return p;
 }
 
 float babs_slam::measurementModelMap(geometry_msgs::Pose p){
 	return 0.0;
 }
 
-void babs_slam::updateMap(){
+void babs_slam::updateMap(particle p){
 
 }
 
+
+// // table 9.1 from the book
+// Map updateMap(Measurement measurement, Pose pose, Map map) {
+// 	for all i,j {
+// 		if i,j is in the LIDAR measurement cone:
+// 			priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7
+// 			map[i][j] = map[i][j] + inverseSensorModel(i,j,measurement,pose) - priorLogOdds;
+// 	}
+// 	return map
+// }
+
+//float inverseSensorModel
 //// table 9.2 from the book
 //// Computes the change in each map cell
 ////
@@ -136,7 +144,7 @@ void babs_slam::resample(std::vector<float> weights){
 		samples.push_back(rand()/RAND_MAX*total_weight);
 	}
 	std::sort(samples.begin(),samples.end());
-	std::vector<geometry_msgs::Pose> newParticles;
+	std::vector<particle> newParticles;
 	total_weight =  weights[0];
 	int weight_counter = 0;
 	for (int i = 0; i < NUMPARTICLES; i++){
@@ -243,7 +251,7 @@ int main(int argc, char** argv)
 
 	ROS_INFO("initializing subscribers");
 	ros::Subscriber encoder_listener= nh_.subscribe("/odom",1,babs_slam::encoder_callback);
-	ros::Subscriber imu_listener= nh_.subscribe("imu_topic",1,babs_slam::imu_callback);
+	ros::Subscriber imu_listener= nh_.subscribe("/imu",1,babs_slam::imu_callback);
 	ros::Subscriber gps_listener= nh_.subscribe("gps_topic",1,babs_slam::gps_callback);
 	ros::Subscriber lidar_listener= nh_.subscribe("/scan",1,babs_slam::lidar_callback);
 
