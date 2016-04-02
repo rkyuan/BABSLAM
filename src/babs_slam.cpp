@@ -290,6 +290,104 @@ void babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, na
 // http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
 float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map) {
 	ROS_INFO("Raytracing from (%f, %f) to (%f, %f)", x0, y0, x1, y1);
+
+	// x and y components of the ray
+	double dx = fabs(x1-x0);
+	double dy = fabs(y1-y0);
+
+	// cell we are currently in
+	int x = int(floor(x0));
+	int y = int(floor(y0));
+
+	// how far we are, units = % of ray length, 0<=t<=1
+	double t = 0;
+
+	// how much does t change to move 1 cell horizontally or vertically
+	double dt_dx = 1.0 / dx;
+	double dt_dy = 1.0 / dy;
+
+	// n - how many cells do we need to traverse
+	int n = 1;
+	// how much we change x,y for each cell (direction where we are moving)
+	int x_inc, y_inc;
+	// value of t for next intersection
+	double t_next_vertical, t_next_horizontal;
+
+	// initialization
+
+	if (dx == 0)
+	{
+		// moving vertically
+		x_inc = 0;
+		t_next_horizontal = dt_dx; // infinity
+	}
+	else if (x1 > x0)
+	{
+		// moving to the right
+		x_inc = 1;
+		n += int(floor(x1)) - x;
+		t_next_horizontal = (floor(x0) + 1 - x0) * dt_dx;
+	}
+	else
+	{
+		// moving to the left
+		x_inc = -1;
+		n += x - int(floor(x1));
+		t_next_horizontal = (x0 - floor(x0)) * dt_dx;
+	}
+
+	if (dy == 0)
+	{
+		// moving horizontally
+		y_inc = 0;
+		t_next_vertical = dt_dy; // infinity
+	}
+	else if (y1 > y0)
+	{
+		// moving up
+		y_inc = 1;
+		n += int(floor(y1)) - y;
+		t_next_vertical = (floor(y0) + 1 - y0) * dt_dy;
+	}
+	else
+	{
+		// moving down
+		y_inc = -1;
+		n += y - int(floor(y1));
+		t_next_vertical = (y0 - floor(y0)) * dt_dy;
+	}
+
+	// traverse
+	for (; n > 0; --n)
+	{
+		ROS_INFO("visit(%d, %d)", x, y);
+		// Terminate if reached the end of the map, ray, or obstacle
+		if (!within_map_bounds(x,y) || map_get_value(map,x,y)>MAP_OCC_THRESH) {
+			float distance_in_cells=t*sqrt(pow(x1-x0,2)+pow(y1-y0,2));
+			ROS_INFO("returning %f", distance_in_cells*MAP_RESOLUTION);
+			return distance_in_cells*MAP_RESOLUTION;
+		}
+		if (n==1) {
+			// reached end of ray
+			float distance_in_cells=sqrt(pow(x1-x0,2)+pow(y1-y0,2));
+			ROS_INFO("returning %f", distance_in_cells*MAP_RESOLUTION);
+			return distance_in_cells*MAP_RESOLUTION;
+		}
+
+		// Go to the next cell
+		if (t_next_vertical < t_next_horizontal)
+		{
+			y += y_inc;
+			t = t_next_vertical;
+			t_next_vertical += dt_dy;
+		}
+		else
+		{
+			x += x_inc;
+			t = t_next_horizontal;
+			t_next_horizontal += dt_dx;
+		}
+	}
 }
 
 // Map helper functions
@@ -297,6 +395,11 @@ float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::
 int babs_slam::map_get_value(nav_msgs::OccupancyGrid map, int x, int y) {
 	int index = x + y*MAP_MAX_X;
 	return map.data[index];
+}
+
+// Check if (x,y) is within map bounds
+bool babs_slam::within_map_bounds(int x, int y) {
+	return (0<=x && x<MAP_MAX_X && 0<=y && y<MAP_MAX_Y);
 }
 
 // Takes probability 0-100 and returns log odds representation
@@ -379,7 +482,7 @@ int main(int argc, char** argv)
 	float test = babs.measurementModelMap(mt, pose, map);
 	ROS_INFO("%f", test);
 
-	babs.raytrace(0, 0, 1, 2, map);
+	babs.raytrace(2.5, 1.5, 2.5, 0.5, map);
 	*/
     ros::spin();
     return 0;

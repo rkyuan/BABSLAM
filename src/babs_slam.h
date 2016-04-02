@@ -33,6 +33,7 @@ public:
 	float raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map);
 
 	int map_get_value(nav_msgs::OccupancyGrid map, int x, int y);
+	bool within_map_bounds(int x, int y);
 	float prob_to_log_odds(int prob);
 	int log_odds_to_prob(float logOdds);
 
@@ -69,7 +70,8 @@ private:
 	// Map parameters
 	const int MAP_MAX_X = 5;
 	const int MAP_MAX_Y = 5;
-	const int MAX_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
+	const float MAP_RESOLUTION = 0.1; // meters per cell
+	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
 
 	void initializeSubscribers();
