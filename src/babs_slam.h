@@ -22,19 +22,24 @@ class babs_slam
 public:
 	babs_slam(ros::NodeHandle* nodehandle);
 
-	
-
+	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
+	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
+	float measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
 	float pMax(float z);
 	float pRand(float z);
+	void raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
+	float raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map);
+
+	int map_get_value(nav_msgs::OccupancyGrid map, int x, int y);
+	float prob_to_log_odds(int prob);
+	int log_odds_to_prob(float logOdds);
 
 private:
 
 	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[]);
 	double sample_normal(double bSquared);
-	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
-	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
 
 	
 	ros::NodeHandle nh_;
@@ -61,10 +66,14 @@ private:
 	const float STD_HIT = 0.05;
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
+	// Map parameters
+	const int MAP_MAX_X = 5;
+	const int MAP_MAX_Y = 5;
+	const int MAX_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
+	const int DEFAULT_VALUE = 50; // map occupancy value by default
 
 	void initializeSubscribers();
 	void update();
-	float measurementModelMap(geometry_msgs::Pose p);
 
 	void updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/);
 

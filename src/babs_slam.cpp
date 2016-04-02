@@ -82,15 +82,11 @@ void babs_slam::update(){
 		geometry_msgs::Pose newpose;
 		//geometry_msgs::Pose newpose = sampleMotionModel(p);
 		//weigh particles
-		particleWeights.push_back(measurementModelMap(newpose));
+		//particleWeights.push_back(measurementModelMap(newpose));
 		updateMap(particles[i]);
 	}
 	//particles=newParticles;
 	resample(particleWeights);
-}
-
-float babs_slam::measurementModelMap(geometry_msgs::Pose p){
-	return 0.0;
 }
 
 // table 9.1 from the book
@@ -164,7 +160,41 @@ void babs_slam::resample(std::vector<float> weights){
 	particles = newParticles;
 }
 
-// Sensor model probabilities
+// Measurement model
+
+// Table 6.1 from the book
+// Not sure about other sensors. We could probably just use Gaussians to model it.
+float babs_slam::measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
+	float result = 1;
+	// Ray cast to predict the result of the scan
+	/*
+	map_ray_caster::MapRayCaster ray_caster;
+	sensor_msgs::LaserScan scan;
+	scan.angle_min = mt.angle_min;
+	scan.angle_max = mt.angle_max;
+	scan.angle_increment = mt.angle_increment;
+	scan.range_max = mt.range_max;
+	scan.header = mt.header;
+	scan.header.frame_id = "laser_frame";
+	ray_caster.laserScanCast(map, scan);
+	*/
+	// Compute the probabilities from the actual scan values
+	for (int i=0;i<mt.ranges.size();i++) {
+		float z = mt.ranges[i];
+		float trueZ = mt.ranges[i];
+		/*
+		z = mt.values[i]
+		trueZ = raycast(z, zAngle, pose, map)
+		prob = zHit*pHit(z, trueZ)
+		prob += zShort*pShort(z, trueZ)
+		prob += zMax*pMax(z)
+		prob += zRand*pRand(z)
+		result = result*prob
+		*/
+		ROS_INFO("i=%d, z=%f, trueZ=%f", i, z, trueZ);
+	}
+	return result;
+}
 
 // eq 6.4-6.6 form the book
 float babs_slam::pHit(float z, float trueZ) {
@@ -249,6 +279,36 @@ void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 
 }
 
+// Simulates LIDAR scan and modifies the ranges[] array of the input scan
+void babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
+	//get x0,y0 from pose
+	//get x1,y1 for each LIDAR ray
+	//use raytrace(x0,y0,x1,y1,map) to get ranges[i]
+}
+
+// Returns distance to the first obstacle between (x0,y0) and (x1,y1)
+// http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
+float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map) {
+	ROS_INFO("Raytracing from (%f, %f) to (%f, %f)", x0, y0, x1, y1);
+}
+
+// Map helper functions
+// Gets int8 value of the cell (x,y) given row-major representation
+int babs_slam::map_get_value(nav_msgs::OccupancyGrid map, int x, int y) {
+	int index = x + y*MAP_MAX_X;
+	return map.data[index];
+}
+
+// Takes probability 0-100 and returns log odds representation
+float babs_slam::prob_to_log_odds(int prob) {
+	return log(prob/(100-prob));
+}
+
+// Takes log odds representation and returns the probability 0-100
+int babs_slam::log_odds_to_prob(float logOdds) {
+	return 100*exp(logOdds)/(1+exp(logOdds));
+}
+
 
 int main(int argc, char** argv) 
 {
@@ -272,7 +332,55 @@ int main(int argc, char** argv)
 		ROS_INFO("i=%f, phit=%f, pshort=%f, pmax=%f, prand=%f",i,phit, pshort,pmax,prand);
 	}
 	*/
-    
+	/*
+	// Measurement model testing code
+	sensor_msgs::LaserScan mt;
+	ros::Time scan_time = ros::Time::now();
+	int num_readings = 5;
+	double laser_frequency = 40;
+	double ranges[num_readings];
+	ranges[0] = 0.15;
+	ranges[1] = 0.21;
+	ranges[2] = 0.25;
+	ranges[3] = 0.21;
+	ranges[4] = 0.15;
+	mt.header.stamp = scan_time;
+	mt.header.frame_id = "laser_frame";
+	mt.angle_min = -1.57;
+	mt.angle_max = 1.57;
+	mt.angle_increment = 3.14 / num_readings;
+	mt.time_increment = (1 / laser_frequency) / (num_readings);
+	mt.range_min = 0.0;
+	mt.range_max = 8.1;
+	mt.ranges.resize(num_readings);
+	for(int i = 0; i < num_readings; ++i){
+		mt.ranges[i] = ranges[i];
+	}
+
+	geometry_msgs::Pose pose;
+	pose.position.x = 2.5;
+	pose.position.y = 2.5;
+	pose.position.z = 0;
+	pose.orientation = babs.convertPlanarPhi2Quaternion(M_PI/2.0);
+
+	nav_msgs::OccupancyGrid map;
+	int data[] = {0,0,0,0,0, 90,0,0,0,90, 0,0,0,0,0, 90,90,0,90,90, 0,0,90,0,0};
+	map.header.stamp = scan_time;
+	map.header.frame_id = "map_frame";
+	map.info.map_load_time = scan_time;
+	map.info.resolution = 0.1;
+	map.info.width = 5;
+	map.info.height = 5;
+	map.data.resize(25);
+	for(int i = 0; i < 25; i++){
+		map.data[i] = data[i];
+	}
+
+	float test = babs.measurementModelMap(mt, pose, map);
+	ROS_INFO("%f", test);
+
+	babs.raytrace(0, 0, 1, 2, map);
+	*/
     ros::spin();
     return 0;
 
