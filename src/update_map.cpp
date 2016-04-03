@@ -16,10 +16,12 @@ int clip(int n, int lower, int upper) {
 }
 
 std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserScan scan,int i){
+	ROS_INFO("running get_points_in_scan");
 	float offset = 0;//TODO: convert this to transform listener
 	float ang = convertPlanarQuat2Phi(p.pose.orientation);
 	ang += offset;
 	ang += scan.angle_min + scan.angle_increment*i;
+	//ROS_INFO("angle=%f", ang);
 	std::vector<point> result;
 	float res = p.map.info.resolution/2;
 	float traveled = 0;
@@ -27,40 +29,38 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 	init.x = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
 	init.y = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
 	result.push_back(init);
-	float traveldist = 0;
-	traveldist = std::min(scan.ranges[i],scan.range_max);
-	if (scan.ranges[i] != scan.ranges[i]){
-		//ROS_INFO("nan");
-		traveldist = scan.range_max;
-	}
-	else if (scan.ranges[i]<scan.range_min){
-		
+	//ROS_INFO("init pose = %f %f", p.pose.position.x, p.pose.position.y);
+	//ROS_INFO("init point = %d %d", init.x, init.y);
+
+	if (scan.ranges[i]<scan.range_min){
+		//ROS_INFO("invalid scan %d %f %f %f", i, scan.range_min,scan.range_max ,scan.ranges[i]);
 
 		return result;
 
 	}
 
-	//ROS_INFO("valid scan %f", ang);
+	ROS_INFO("valid scan %f", ang);
 	
-		while(traveled<traveldist){
-
+		while(traveled<std::min(scan.ranges[i],scan.range_max)){
 			traveled += res;
 			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
-			xloc += traveled*cos(ang);
+
+			xloc += traveled*cos(ang)/p.map.info.resolution;
 
 			float yloc = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
-			yloc += traveled*sin(ang);
+			yloc += traveled*sin(ang)/p.map.info.resolution;
 
 			point addthis;
 			addthis.x = xloc;
 			addthis.y = yloc;
 			if (!comparePoints(addthis,result.back())){
+				//ROS_INFO("Adding point %d %d", addthis.x, addthis.y);
 				result.push_back(addthis);
 			}
-			
+			//ROS_INFO("Finished processing %f %f, traveled=%f", xloc, yloc, traveled);
 		}
 
-	 ROS_INFO("result length %f %d", traveled, i);
+	// ROS_INFO("result lenght %d", result.size());
 	return result;
 }
 
@@ -73,10 +73,11 @@ void babs_slam::updateMap(particle &p){
 		//for each point in scan
 		//ROS_INFO("am here ");
 			for (int j = 0; j < coneSlice.size();j++){
-				float priorLogOdds = 0;//log(priorOcc/(1-priorOcc)); // eq 9.7
-				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.height;
-				int lOdd = p.map.data[index] + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
-				p.map.data[index] = clip(lOdd,0,100);
+				float priorLogOdds = prob_to_log_odds(DEFAULT_VALUE);//0;//log(priorOcc/(1-priorOcc)); // eq 9.7
+				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.width;
+				int lOdd = prob_to_log_odds(p.map.data[index]) + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
+				//p.map.data[index] = clip(lOdd,0,100);
+				p.map.data[index] = log_odds_to_prob(lOdd);
 		}
 //		return map
 	}
@@ -90,10 +91,10 @@ void babs_slam::updateMap(particle &p){
 
 //really cheaty approach
 int babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j){
-	if (scan.ranges[i]>=scan.range_max){
+	if (scan.ranges[i]<scan.range_min){
 		return 0;
 	}
-	if (j==coneSlice.size()-1){
+	if (j==coneSlice.size()-1 && scan.ranges[i]<scan.range_max && std::isfinite(scan.ranges[i])){
 		return 1;
 	}
 	else return -1;
