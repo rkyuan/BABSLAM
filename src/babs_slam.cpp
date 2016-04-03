@@ -445,12 +445,6 @@ void measurement_model_test(babs_slam babs) {
 	ranges[2] = 0.25;
 	ranges[3] = 0.21;
 	ranges[4] = 0.15;
-
-	ranges[0] = 5.16;
-	ranges[1] = 0.20;
-	ranges[2] = 0.26;
-	ranges[3] = 0.21;
-	ranges[4] = 0.14;
 	mt.header.stamp = scan_time;
 	mt.header.frame_id = "laser_frame";
 	mt.angle_min = -1.57;
@@ -498,7 +492,7 @@ int main(int argc, char** argv)
 	babs_slam babs(&nh_);
 
 	//sensor_model_test(babs);
-	//measurement_model_test(babs);
+	measurement_model_test(babs);
 
     ros::spin();
     return 0;
