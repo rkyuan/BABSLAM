@@ -29,6 +29,8 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 add_library(babs_slam_lib 
 src/babs_slam.cpp
 src/update_map.cpp
+src/motion_model.cpp
+src/measurement_model.cpp
 src/sensor_callbacks.cpp)
 
 # Executables: uncomment the following and edit arguments to compile new nodes
