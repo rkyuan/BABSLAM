@@ -8,27 +8,51 @@ babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 	ROS_INFO("initializing subscribers");
 	initializeSubscribers();
 	initializePublishers();
-
-	
-
+	initializeParticles();
 }
+
+void babs_slam::initializeParticles(){
+	particles.clear();
+	nav_msgs::MapMetaData info;
+	info.resolution = MAP_RESOLUTION;
+	info.width = MAP_MAX_X;
+	info.height = MAP_MAX_Y;
+
+	geometry_msgs::Pose origin;
+	origin.position.x = -10;
+	origin.position.y = -10;
+
+	info.origin = origin;
+
+	for (int i = 0; i < NUMPARTICLES; i++){
+		nav_msgs::OccupancyGrid map;
+		map.header.frame_id = "map_frame";
+		map.info = info;
+		for (int j = 0; j < MAP_MAX_X*MAP_MAX_Y; j++){
+			map.data[j]=50;
+		}
+	}
+}
+
 
 //this is the highest level of abstraction for the algorithm
 void babs_slam::update(){
-	//std::vector<geometry_msgs::Pose> newParticles;
+	ROS_INFO("updating");
+	//THIS IS JUST TESTING---------------------------------------
 	std::vector<float> particleWeights;
 	//result will update particles
 	for (int i = 0; i < particles.size();i++){
 		geometry_msgs::Pose p = particles[i].pose;
 		//get new particles
-		geometry_msgs::Pose newpose;
+		geometry_msgs::Pose newpose = last_odom.pose.pose;
+		particles[i].pose = newpose;
 		//geometry_msgs::Pose newpose = sampleMotionModel(p);
 		//weigh particles
 		//particleWeights.push_back(measurementModelMap(newpose));
 		updateMap(particles[i]);
 	}
-	//particles=newParticles;
-	resample(particleWeights);
+	
+	//resample(particleWeights);
 }
 
 
