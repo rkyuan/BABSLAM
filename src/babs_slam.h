@@ -28,6 +28,9 @@ public:
 
 	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
 	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
+
+	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[6]);
+
 	float measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
@@ -41,11 +44,19 @@ public:
 	float prob_to_log_odds(int prob);
 	int log_odds_to_prob(float logOdds);
 
+	ros::Publisher map_publisher;
+
+
 private:
+
 
 	
 
 	//private class variables
+
+	double sample_normal(double bSquared);
+
+
 	ros::NodeHandle nh_;
 	std::vector<particle> particles;
 
@@ -61,8 +72,6 @@ private:
 
 
 
-	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[]);
-	double sample_normal(double bSquared);
 
 
 	const int NUMPARTICLES = 500;
@@ -86,6 +95,8 @@ private:
 	  
 
 	void initializeSubscribers();
+	void initializePublishers();
+
 	void update();
 
 	void updateMap(particle p);
