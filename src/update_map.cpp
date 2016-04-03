@@ -45,7 +45,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 		while(traveled<traveldist){
 
 			traveled += res;
-			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution; 
+			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
 			xloc += traveled*cos(ang);
 
 			float yloc = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;

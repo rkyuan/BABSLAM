@@ -120,6 +120,7 @@ int main(int argc, char** argv)
 	//motion_model_test(babs);
 	ros::Rate naptime(1.0);
 	while(ros::ok()){
+
 		babs.update();
 		ros::spinOnce();
 		naptime.sleep();
