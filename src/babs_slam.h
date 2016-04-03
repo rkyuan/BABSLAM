@@ -94,12 +94,12 @@ private:
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
 	// Map parameters
-	const int MAP_MAX_X = 500;
-	const int MAP_MAX_Y = 500;
+	const int MAP_MAX_X = 1000;
+	const int MAP_MAX_Y = 1000;
 	const int ROBOT_START_OFFSET_X = 0;
 	const int ROBOT_START_OFFSET_Y = 0;
 	const float ROBOT_START_ORIENTATION = 0;
-	const float MAP_RESOLUTION = 0.1; // meters per cell
+	const float MAP_RESOLUTION = 0.05; // meters per cell
 	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
 	  

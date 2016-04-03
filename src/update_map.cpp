@@ -30,6 +30,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 	float traveldist = 0;
 	traveldist = std::min(scan.ranges[i],scan.range_max);
 	if (scan.ranges[i] != scan.ranges[i]){
+		//ROS_INFO("nan");
 		traveldist = scan.range_max;
 	}
 	else if (scan.ranges[i]<scan.range_min){
@@ -59,7 +60,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 			
 		}
 
-	 ROS_INFO("result length %f %f %f", traveled, scan.ranges[i], scan.range_max);
+	 ROS_INFO("result length %f %d", traveled, i);
 	return result;
 }
 
@@ -89,7 +90,7 @@ void babs_slam::updateMap(particle &p){
 
 //really cheaty approach
 int babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j){
-	if (scan.ranges[i]>scan.range_max||scan.ranges[i]<scan.range_min){
+	if (scan.ranges[i]>=scan.range_max){
 		return 0;
 	}
 	if (j==coneSlice.size()-1){
