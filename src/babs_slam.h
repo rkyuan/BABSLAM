@@ -16,6 +16,10 @@ struct particle{
 	geometry_msgs::Pose pose;
 	nav_msgs::OccupancyGrid map;
 };
+struct point{
+	int x;
+	int y;
+};
 
 class babs_slam
 {
@@ -39,12 +43,12 @@ public:
 
 private:
 
-	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[]);
-	double sample_normal(double bSquared);
-
 	
+
+	//private class variables
 	ros::NodeHandle nh_;
 	std::vector<particle> particles;
+
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::Odometry last_odom;
 	sensor_msgs::LaserScan last_scan;
@@ -56,6 +60,9 @@ private:
 	ros::Subscriber lidar_listener;
 
 
+
+	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[]);
+	double sample_normal(double bSquared);
 
 
 	const int NUMPARTICLES = 500;
@@ -70,23 +77,28 @@ private:
 	// Map parameters
 	const int MAP_MAX_X = 5;
 	const int MAP_MAX_Y = 5;
+	const int ROBOT_START_OFFSET_X = 0;
+	const int ROBOT_START_OFFSET_Y = 0;
+	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.1; // meters per cell
 	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
+	  
 
 	void initializeSubscribers();
 	void update();
 
 	void updateMap(particle p);
+	std::vector<point> get_points_in_scan(particle p, sensor_msgs::LaserScan scan,int i);
+	int inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j);
 
 	void resample(std::vector<float> weights);
 
 
 	void encoder_callback(const nav_msgs::Odometry& odom_value);
 	void lidar_callback(const sensor_msgs::LaserScan& laser_scan);
-
-	//TODO implement callbacks for these with correct message types
 	void imu_callback(const sensor_msgs::Imu& imu_data);
+	//TODO: GPS
 	void gps_callback(const std_msgs::Float64& message_holder);
 
 

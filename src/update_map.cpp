@@ -1,16 +1,88 @@
 #include "babs_slam.h"
 
 // table 9.1 from the book
+
+bool comparePoints(point p1, point p2){
+	if (p1.x == p2.x && p1.y == p2.y){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+int clip(int n, int lower, int upper) {
+  return std::max(lower, std::min(n, upper));
+}
+
+std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserScan scan,int i){
+	float offset = 0;//TODO: convert this to transform listener
+	float ang = convertPlanarQuat2Phi(p.pose.orientation);
+	ang += offset;
+	ang += scan.angle_min + scan.angle_increment*i;
+	std::vector<point> result;
+	float res = MAP_RESOLUTION/2;
+	float traveled = 0;
+	point init;
+	init.x = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
+	init.y = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
+	result.push_back(init);
+
+	if(traveled<scan.range_max){
+		while(traveled<scan.ranges[i]){
+			traveled += res;
+			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution; 
+			xloc += traveled*cos(ang);
+
+			float yloc = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
+			yloc += traveled*sin(ang);
+
+			point addthis;
+			addthis.x = xloc;
+			addthis.y = yloc;
+			if (!comparePoints(addthis,result.back())){
+				result.push_back(addthis);
+			}
+			
+		}
+	}
+	return result;
+}
+
+
 void babs_slam::updateMap(particle p){
-//	for all i,j {
-//			if i,j is in the LIDAR measurement cone:
-//				priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7
-//				map[i][j] = map[i][j] + inverseSensorModel(i,j,measurement,pose) - priorLogOdds;
-//		}
+	//for each scan point
+	for (int i = 0;i<(last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment;i++) {
+		std::vector<point> coneSlice = get_points_in_scan(p,last_scan,i);
+		//for each point in scan
+			for (int j = 0; j < coneSlice.size();j++){
+				float priorLogOdds = 0;//log(priorOcc/(1-priorOcc)); // eq 9.7
+				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.height;
+				int lOdd = p.map.data[index] + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
+				p.map.data[index] = clip(lOdd,0,100);
+		}
 //		return map
+	}
 }
 
 //float inverseSensorModel
+//basicly if grid is occupied, return positive number;
+//if unoccupied, return negative number;
+
+
+//really cheaty approach
+int babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j){
+	if (scan.ranges[i]>scan.range_max||scan.ranges[i]<scan.range_min){
+		return 0;
+	}
+	if (j==coneSlice.size()-1){
+		return 1;
+	}
+	else return -1;
+}
+//lol
+
+
 //// table 9.2 from the book
 //// Computes the change in each map cell
 ////
