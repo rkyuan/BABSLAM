@@ -21,15 +21,23 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 	ang += offset;
 	ang += scan.angle_min + scan.angle_increment*i;
 	std::vector<point> result;
-	float res = MAP_RESOLUTION/2;
+	float res = p.map.info.resolution/2;
 	float traveled = 0;
 	point init;
 	init.x = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
 	init.y = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
 	result.push_back(init);
 
-	if(traveled<scan.range_max){
-		while(traveled<scan.ranges[i]){
+	if (scan.ranges[i]<scan.range_min){
+		//ROS_INFO("invalid scan %d %f %f %f", i, scan.range_min,scan.range_max ,scan.ranges[i]);
+
+		return result;
+
+	}
+
+	ROS_INFO("valid scan %f", ang);
+	
+		while(traveled<std::min(scan.ranges[i],scan.range_max)){
 			traveled += res;
 			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution; 
 			xloc += traveled*cos(ang);
@@ -45,17 +53,19 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 			}
 			
 		}
-	}
+
+	// ROS_INFO("result lenght %d", result.size());
 	return result;
 }
 
 
-void babs_slam::updateMap(particle p){
+void babs_slam::updateMap(particle &p){
 	//for each scan point
-	ROS_INFO("updating map");
-	for (int i = 0;i<(last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment;i++) {
+	ROS_INFO("updating map %f", (last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment);
+	for (int i = 0;i<=(last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment;i++) {
 		std::vector<point> coneSlice = get_points_in_scan(p,last_scan,i);
 		//for each point in scan
+		//ROS_INFO("am here ");
 			for (int j = 0; j < coneSlice.size();j++){
 				float priorLogOdds = 0;//log(priorOcc/(1-priorOcc)); // eq 9.7
 				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.height;
@@ -64,7 +74,7 @@ void babs_slam::updateMap(particle p){
 		}
 //		return map
 	}
-	map_publisher.publish(map);
+	map_publisher.publish(p.map);
 }
 
 //float inverseSensorModel

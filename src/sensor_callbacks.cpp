@@ -37,7 +37,7 @@ void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
 
 void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 
-	last_scan = last_scan;
+	last_scan = laser_scan;
 
 	float angle_min = laser_scan.angle_min;
 	float angle_max = laser_scan.angle_max;
@@ -49,11 +49,11 @@ void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 	//laser_scan.ranges;
 	//laser_scan.intensities;
 
-	ROS_INFO("angle_min = %f", angle_min);
-	ROS_INFO("angle_max = %f", angle_max);
-	ROS_INFO("angle_increment = %f", angle_increment);
-	ROS_INFO("time_increment = %f", time_increment);
-	ROS_INFO("scan_time = %f", scan_time);
-	ROS_INFO("range_min = %f", range_min);
-	ROS_INFO("range_max = %f", range_max);
+	// ROS_INFO("angle_min = %f", angle_min);
+	// ROS_INFO("angle_max = %f", angle_max);
+	// ROS_INFO("angle_increment = %f", angle_increment);
+	// ROS_INFO("time_increment = %f", time_increment);
+	// ROS_INFO("scan_time = %f", scan_time);
+	// ROS_INFO("range_min = %f", range_min);
+	// ROS_INFO("range_max = %f", range_max);
 }

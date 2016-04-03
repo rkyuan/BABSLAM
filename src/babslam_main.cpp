@@ -99,12 +99,8 @@ void motion_model_test(babs_slam babs) {
 	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
 }
 void update_map_test(babs_slam babs){
-	ROS_INFO("am here");
-	ros::Rate naptime(1.0);
-	while(ros::ok()){
-		babs.update();
-		naptime.sleep();
-	}
+	
+	
 }
 
 int main(int argc, char** argv)
@@ -118,12 +114,17 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh_;
 
 	babs_slam babs(&nh_);
-
+	ROS_INFO("hi");
 	//sensor_model_test(babs);
 	//measurement_model_test(babs);
 	//motion_model_test(babs);
-	update_map_test(babs);
+	ros::Rate naptime(1.0);
+	while(ros::ok()){
+		babs.update();
+		ros::spinOnce();
+		naptime.sleep();
 
+	}
 
 
     ros::spin();

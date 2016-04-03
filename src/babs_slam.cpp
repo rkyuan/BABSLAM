@@ -19,18 +19,27 @@ void babs_slam::initializeParticles(){
 	info.height = MAP_MAX_Y;
 
 	geometry_msgs::Pose origin;
-	origin.position.x = -10;
-	origin.position.y = -10;
+	origin.position.x = -30;
+	origin.position.y = -30;
 
 	info.origin = origin;
-
+	ROS_INFO("here");
+	geometry_msgs::Pose p;
+	p.position.x = 0;
+	p.position.y = 0;
 	for (int i = 0; i < NUMPARTICLES; i++){
+
 		nav_msgs::OccupancyGrid map;
 		map.header.frame_id = "map_frame";
 		map.info = info;
+		map.data.resize(MAP_MAX_X*MAP_MAX_Y);
 		for (int j = 0; j < MAP_MAX_X*MAP_MAX_Y; j++){
 			map.data[j]=50;
 		}
+		particle part;
+		part.pose = p;
+		part.map = map;
+		particles.push_back(part);
 	}
 }
 
