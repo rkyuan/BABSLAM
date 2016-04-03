@@ -1,7 +1,7 @@
 #include "babs_slam.h"
 
 // table 9.1 from the book
-void babs_slam::updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/){
+void babs_slam::updateMap(particle p){
 //	for all i,j {
 //			if i,j is in the LIDAR measurement cone:
 //				priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7

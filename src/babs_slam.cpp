@@ -10,12 +10,53 @@ babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 	
 
 }
-void babs_slam::initializeSubscribers(){
-	encoder_listener= nh_.subscribe("/odom",1,&babs_slam::encoder_callback,this);
-	imu_listener= nh_.subscribe("/imu",1,&babs_slam::imu_callback,this);
-	gps_listener= nh_.subscribe("gps_topic",1,&babs_slam::gps_callback,this);
-	lidar_listener= nh_.subscribe("/scan",1,&babs_slam::lidar_callback,this);
+
+//this is the highest level of abstraction for the algorithm
+void babs_slam::update(){
+	//std::vector<geometry_msgs::Pose> newParticles;
+	std::vector<float> particleWeights;
+	//result will update particles
+	for (int i = 0; i < particles.size();i++){
+		geometry_msgs::Pose p = particles[i].pose;
+		//get new particles
+		geometry_msgs::Pose newpose;
+		//geometry_msgs::Pose newpose = sampleMotionModel(p);
+		//weigh particles
+		//particleWeights.push_back(measurementModelMap(newpose));
+		updateMap(particles[i]);
+	}
+	//particles=newParticles;
+	resample(particleWeights);
 }
+
+
+void babs_slam::resample(std::vector<float> weights){
+	float total_weight = 0;
+	for (int i = 0; i < NUMPARTICLES; i ++){
+		//add up the size of all the weights
+		total_weight+= weights[i];
+	}
+	std::vector<float> samples;
+	for (int i = 0; i < NUMPARTICLES; i++){
+		//take a bunch of random numbers in the range of the weights
+		samples.push_back(rand()/RAND_MAX*total_weight);
+	}
+	std::sort(samples.begin(),samples.end());
+	std::vector<particle> newParticles;
+	total_weight =  weights[0];
+	int weight_counter = 0;
+	for (int i = 0; i < NUMPARTICLES; i++){
+		if (total_weight>samples[i]){
+			newParticles.push_back(particles[weight_counter]);
+		}
+		else{
+			weight_counter ++;
+			total_weight += weights[weight_counter];
+		}
+	}
+	particles = newParticles;
+}
+
 
 // Table 5.3 from the book
 // Samples a pose from the motion model given previous pose and control
@@ -72,50 +113,7 @@ geometry_msgs::Quaternion babs_slam::convertPlanarPhi2Quaternion(double phi) {
 	return quaternion;
 }
 
-void babs_slam::update(){
-	//std::vector<geometry_msgs::Pose> newParticles;
-	std::vector<float> particleWeights;
-	//result will update particles
-	for (int i = 0; i < particles.size();i++){
-		geometry_msgs::Pose p = particles[i].pose;
-		//get new particles
-		geometry_msgs::Pose newpose;
-		//geometry_msgs::Pose newpose = sampleMotionModel(p);
-		//weigh particles
-		//particleWeights.push_back(measurementModelMap(newpose));
-		updateMap(particles[i]);
-	}
-	//particles=newParticles;
-	resample(particleWeights);
-}
 
-
-void babs_slam::resample(std::vector<float> weights){
-	float total_weight = 0;
-	for (int i = 0; i < NUMPARTICLES; i ++){
-		//add up the size of all the weights
-		total_weight+= weights[i];
-	}
-	std::vector<float> samples;
-	for (int i = 0; i < NUMPARTICLES; i++){
-		//take a bunch of random numbers in the range of the weights
-		samples.push_back(rand()/RAND_MAX*total_weight);
-	}
-	std::sort(samples.begin(),samples.end());
-	std::vector<particle> newParticles;
-	total_weight =  weights[0];
-	int weight_counter = 0;
-	for (int i = 0; i < NUMPARTICLES; i++){
-		if (total_weight>samples[i]){
-			newParticles.push_back(particles[weight_counter]);
-		}
-		else{
-			weight_counter ++;
-			total_weight += weights[weight_counter];
-		}
-	}
-	particles = newParticles;
-}
 
 // Measurement model
 
@@ -188,51 +186,6 @@ bool babs_slam::compareFloats(float a, float b) {
 	if (fabs(a-b) < 0.001)
 		return true;
 	return false;
-}
-
-void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
-
-	double x = odom_value.pose.pose.position.x;
-	double y = odom_value.pose.pose.position.y;
-
-	last_odom = odom_value;
-
-	//TODO do something with the odom values
-	ROS_INFO("x,y from odom: %f, %f", x,y);
-
-}
-void babs_slam::imu_callback(const sensor_msgs::Imu& imu_data){
-
-	last_imu = imu_data;
-
-}
-void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
-
-}
-void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
-
-	last_scan = last_scan;
-
-	float angle_min = laser_scan.angle_min;
-	float angle_max = laser_scan.angle_max;
-	float angle_increment = laser_scan.angle_increment;
-	float time_increment = laser_scan.time_increment;
-	float scan_time = laser_scan.scan_time;
-	float range_min = laser_scan.range_min;
-	float range_max = laser_scan.range_max;
-	//laser_scan.ranges;
-	//laser_scan.intensities;
-
-	ROS_INFO("angle_min = %f", angle_min);
-	ROS_INFO("angle_max = %f", angle_max);
-	ROS_INFO("angle_increment = %f", angle_increment);
-	ROS_INFO("time_increment = %f", time_increment);
-	ROS_INFO("scan_time = %f", scan_time);
-	ROS_INFO("range_min = %f", range_min);
-	ROS_INFO("range_max = %f", range_max);
-
-
-
 }
 
 // Simulates LIDAR scan and modifies the ranges[] array of the input scan

@@ -77,7 +77,7 @@ private:
 	void initializeSubscribers();
 	void update();
 
-	void updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/);
+	void updateMap(particle p);
 
 	void resample(std::vector<float> weights);
 
