@@ -27,8 +27,12 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 	init.x = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
 	init.y = (p.pose.position.y-p.map.info.origin.position.y)/p.map.info.resolution;
 	result.push_back(init);
-
-	if (scan.ranges[i]<scan.range_min){
+	float traveldist = 0;
+	traveldist = std::min(scan.ranges[i],scan.range_max);
+	if (scan.ranges[i] != scan.ranges[i]){
+		traveldist = scan.range_max;
+	}
+	else if (scan.ranges[i]<scan.range_min){
 		
 
 		return result;
@@ -37,7 +41,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 
 	//ROS_INFO("valid scan %f", ang);
 	
-		while(traveled<std::min(scan.ranges[i],scan.range_max)){
+		while(traveled<traveldist){
 
 			traveled += res;
 			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution; 
@@ -55,7 +59,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 			
 		}
 
-	 ROS_INFO("result length %f", traveled);
+	 ROS_INFO("result length %f %f %f", traveled, scan.ranges[i], scan.range_max);
 	return result;
 }
 
