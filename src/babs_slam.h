@@ -37,12 +37,14 @@ public:
 	float prob_to_log_odds(int prob);
 	int log_odds_to_prob(float logOdds);
 
+	ros::Publisher map_publisher;
+
+
 private:
 
 	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[]);
 	double sample_normal(double bSquared);
 
-	
 	ros::NodeHandle nh_;
 	std::vector<particle> particles;
 	nav_msgs::OccupancyGrid map;
@@ -54,9 +56,6 @@ private:
 	ros::Subscriber imu_listener;
 	ros::Subscriber gps_listener;
 	ros::Subscriber lidar_listener;
-
-
-
 
 	const int NUMPARTICLES = 500;
 	// Measurement model parameters
@@ -75,6 +74,8 @@ private:
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
 
 	void initializeSubscribers();
+	void initializePublishers();
+
 	void update();
 
 	void updateMap(particle p);

@@ -7,6 +7,8 @@ babs_slam::babs_slam(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
 	ROS_INFO("initializing subscribers");
 	initializeSubscribers();
+	initializePublishers();
+
 	
 
 }

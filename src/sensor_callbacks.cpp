@@ -7,6 +7,12 @@ void babs_slam::initializeSubscribers(){
 	lidar_listener= nh_.subscribe("/scan",1,&babs_slam::lidar_callback,this);
 }
 
+void babs_slam::initializePublishers(){
+	map_publisher = nh_.advertise<nav_msgs::OccupancyGrid>("/map", 1, true);
+}
+
+
+
 void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
 
 	double x = odom_value.pose.pose.position.x;

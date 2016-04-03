@@ -60,11 +60,14 @@ void measurement_model_test(babs_slam babs) {
 
 	float test = babs.measurementModelMap(mt, pose, map);
 	ROS_INFO("Weight: %f", test);
+
+	babs.map_publisher.publish(map);
+
 }
 
 int main(int argc, char** argv)
 {
-
+	ROS_INFO("Running babslam_main...");
 
 	ros::init(argc, argv, "babs_slam");
 
