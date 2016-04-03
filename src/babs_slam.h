@@ -29,7 +29,7 @@ public:
 	float pShort(float z, float trueZ);
 	float pMax(float z);
 	float pRand(float z);
-	void raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
+	sensor_msgs::LaserScan raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
 	float raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map);
 
 	int map_get_value(nav_msgs::OccupancyGrid map, int x, int y);
@@ -60,10 +60,10 @@ private:
 
 	const int NUMPARTICLES = 500;
 	// Measurement model parameters
-	const float Z_HIT = 1;
-	const float Z_SHORT = 0;
-	const float Z_MAX = 0;
-	const float Z_RAND = 0;
+	const float Z_HIT = 0.6;
+	const float Z_SHORT = 0.1;
+	const float Z_MAX = 0.1;
+	const float Z_RAND = 0.2;
 	const float STD_HIT = 0.05;
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;

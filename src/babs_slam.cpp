@@ -166,9 +166,9 @@ void babs_slam::resample(std::vector<float> weights){
 // Not sure about other sensors. We could probably just use Gaussians to model it.
 float babs_slam::measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
 	float result = 1;
+	int numScans = mt.ranges.size();
+
 	// Ray cast to predict the result of the scan
-	/*
-	map_ray_caster::MapRayCaster ray_caster;
 	sensor_msgs::LaserScan scan;
 	scan.angle_min = mt.angle_min;
 	scan.angle_max = mt.angle_max;
@@ -176,21 +176,20 @@ float babs_slam::measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::P
 	scan.range_max = mt.range_max;
 	scan.header = mt.header;
 	scan.header.frame_id = "laser_frame";
-	ray_caster.laserScanCast(map, scan);
-	*/
+	scan.ranges.resize(numScans);
+	scan = raytrace(scan, pose, map);
+
 	// Compute the probabilities from the actual scan values
-	for (int i=0;i<mt.ranges.size();i++) {
+	for (int i=0;i<numScans;i++) {
 		float z = mt.ranges[i];
-		float trueZ = mt.ranges[i];
-		/*
-		z = mt.values[i]
-		trueZ = raycast(z, zAngle, pose, map)
-		prob = zHit*pHit(z, trueZ)
-		prob += zShort*pShort(z, trueZ)
-		prob += zMax*pMax(z)
-		prob += zRand*pRand(z)
-		result = result*prob
-		*/
+		float trueZ = scan.ranges[i];
+
+		float prob = Z_HIT*pHit(z, trueZ);
+		prob += Z_SHORT*pShort(z, trueZ);
+		prob += Z_MAX*pMax(z);
+		prob += Z_RAND*pRand(z);
+		result = result*prob;
+
 		ROS_INFO("i=%d, z=%f, trueZ=%f", i, z, trueZ);
 	}
 	return result;
@@ -198,7 +197,7 @@ float babs_slam::measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::P
 
 // eq 6.4-6.6 form the book
 float babs_slam::pHit(float z, float trueZ) {
-	if (z<0 || z>MAX_LIDAR_RANGE)
+	if (z<0.001 || z>MAX_LIDAR_RANGE)
 		return 0;
 	float gaussianProb = (1/sqrt(2*M_PI*pow(STD_HIT,2)))*exp(-0.5*pow((z-trueZ),2)/pow(STD_HIT,2));
 	float normalizer = 1; // Supposed to be an integral, but it only matters when measured value is close to min or max
@@ -280,17 +279,27 @@ void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 }
 
 // Simulates LIDAR scan and modifies the ranges[] array of the input scan
-void babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
+sensor_msgs::LaserScan babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
 	//get x0,y0 from pose
-	//get x1,y1 for each LIDAR ray
-	//use raytrace(x0,y0,x1,y1,map) to get ranges[i]
+	double x0 = pose.position.x;
+	double y0 = pose.position.y;
+
+	int numRays = (int)((mt.angle_max-mt.angle_min)/mt.angle_increment)+1;
+	mt.ranges.resize(numRays);
+	for (int i=0; i<numRays; i++) {
+		// get x1,y1 for each ray
+		double angle = convertPlanarQuat2Phi(pose.orientation) + mt.angle_min + i*mt.angle_increment;
+		double x1 = cos(angle)*MAX_LIDAR_RANGE + x0;
+		double y1 = sin(angle)*MAX_LIDAR_RANGE + y0;
+		// raytrace
+		mt.ranges[i] = raytrace(x0, y0, x1, y1, map);
+	}
+	return mt;
 }
 
 // Returns distance to the first obstacle between (x0,y0) and (x1,y1)
 // http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
 float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map) {
-	ROS_INFO("Raytracing from (%f, %f) to (%f, %f)", x0, y0, x1, y1);
-
 	// x and y components of the ray
 	double dx = fabs(x1-x0);
 	double dy = fabs(y1-y0);
@@ -360,17 +369,14 @@ float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::
 	// traverse
 	for (; n > 0; --n)
 	{
-		ROS_INFO("visit(%d, %d)", x, y);
 		// Terminate if reached the end of the map, ray, or obstacle
 		if (!within_map_bounds(x,y) || map_get_value(map,x,y)>MAP_OCC_THRESH) {
 			float distance_in_cells=t*sqrt(pow(x1-x0,2)+pow(y1-y0,2));
-			ROS_INFO("returning %f", distance_in_cells*MAP_RESOLUTION);
 			return distance_in_cells*MAP_RESOLUTION;
 		}
 		if (n==1) {
 			// reached end of ray
 			float distance_in_cells=sqrt(pow(x1-x0,2)+pow(y1-y0,2));
-			ROS_INFO("returning %f", distance_in_cells*MAP_RESOLUTION);
 			return distance_in_cells*MAP_RESOLUTION;
 		}
 
@@ -413,20 +419,11 @@ int babs_slam::log_odds_to_prob(float logOdds) {
 }
 
 
-int main(int argc, char** argv) 
-{
 
+// Testing code
 
-	ros::init(argc, argv, "babs_slam");
-
-	ros::NodeHandle nh_;
-
-	babs_slam babs(&nh_);
-
-	
-
-	/*
-	// Sensor model testing code
+void sensor_model_test(babs_slam babs) {
+	ROS_INFO("Testing sensor model");
 	for (float i=0; i<11; i+=0.05) {
 		float phit = babs.pHit(i,5);
 		float pshort = babs.pShort(i, 5);
@@ -434,9 +431,10 @@ int main(int argc, char** argv)
 		float prand = babs.pRand(i);
 		ROS_INFO("i=%f, phit=%f, pshort=%f, pmax=%f, prand=%f",i,phit, pshort,pmax,prand);
 	}
-	*/
-	/*
-	// Measurement model testing code
+}
+
+void measurement_model_test(babs_slam babs) {
+	ROS_INFO("Testing measurement model");
 	sensor_msgs::LaserScan mt;
 	ros::Time scan_time = ros::Time::now();
 	int num_readings = 5;
@@ -447,11 +445,17 @@ int main(int argc, char** argv)
 	ranges[2] = 0.25;
 	ranges[3] = 0.21;
 	ranges[4] = 0.15;
+
+	ranges[0] = 5.16;
+	ranges[1] = 0.20;
+	ranges[2] = 0.26;
+	ranges[3] = 0.21;
+	ranges[4] = 0.14;
 	mt.header.stamp = scan_time;
 	mt.header.frame_id = "laser_frame";
 	mt.angle_min = -1.57;
 	mt.angle_max = 1.57;
-	mt.angle_increment = 3.14 / num_readings;
+	mt.angle_increment = 3.14 / (num_readings-1);
 	mt.time_increment = (1 / laser_frequency) / (num_readings);
 	mt.range_min = 0.0;
 	mt.range_max = 8.1;
@@ -462,7 +466,7 @@ int main(int argc, char** argv)
 
 	geometry_msgs::Pose pose;
 	pose.position.x = 2.5;
-	pose.position.y = 2.5;
+	pose.position.y = 1.5;
 	pose.position.z = 0;
 	pose.orientation = babs.convertPlanarPhi2Quaternion(M_PI/2.0);
 
@@ -480,10 +484,22 @@ int main(int argc, char** argv)
 	}
 
 	float test = babs.measurementModelMap(mt, pose, map);
-	ROS_INFO("%f", test);
+	ROS_INFO("Weight: %f", test);
+}
 
-	babs.raytrace(2.5, 1.5, 2.5, 0.5, map);
-	*/
+int main(int argc, char** argv)
+{
+
+
+	ros::init(argc, argv, "babs_slam");
+
+	ros::NodeHandle nh_;
+
+	babs_slam babs(&nh_);
+
+	//sensor_model_test(babs);
+	//measurement_model_test(babs);
+
     ros::spin();
     return 0;
 
