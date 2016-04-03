@@ -89,49 +89,6 @@ void babs_slam::update(){
 	resample(particleWeights);
 }
 
-// table 9.1 from the book
-void babs_slam::updateMap(particle p/* , const sensor_msgs::LaserScan& laser_scan, nav_msgs::OccupancyGrid& map*/){
-//	for all i,j {
-//			if i,j is in the LIDAR measurement cone:
-//				priorLogOdds = log(priorOcc/(1-priorOcc)); // eq 9.7
-//				map[i][j] = map[i][j] + inverseSensorModel(i,j,measurement,pose) - priorLogOdds;
-//		}
-//		return map
-}
-
-//float inverseSensorModel
-//// table 9.2 from the book
-//// Computes the change in each map cell
-////
-//// x and y reference the cell of interest in the occupancy grid.
-//// Measurement is the entire lidar scan
-//// Pose is the Pose of the robot
-//float inverseSensorModel(int x, int y, Measurement mt, Pose pose) {
-//	// Get the center of the cell
-//	float x = cellX + 0.5;
-//	float y = cellY + 0.5;
-//	// Get distance and angle of (cell-pose) vector
-//	float r = sqrt((x-pose.x)^2+(y-pose.y)^2);
-//	float phi = atan2(x-pose.x, y-pose.y) - pose.theta
-//	// Find the closest ray
-//	minAngle = 99999
-//	k = 0
-//	for (i=0; i<len(mt.values); i++) {
-//		float angle = getAngle(pose, i);
-//		if (angle < minAngle) {
-//			minAngle = angle;
-//			k = i;
-//		}
-//	}
-//	z = mt.values[k]
-//	// Change cell occupancy depending on the measurement and cell coordinates
-//	if (r > min(zMax, z+ismAlpha/2) || abs(phi-minAngle)>ismBeta/2)
-//		return l0;
-//	if (z<zMax && abs(r-z)<ismAlpha/2)
-//		return lOcc;
-//	return lFree;
-//}
-
 
 void babs_slam::resample(std::vector<float> weights){
 	float total_weight = 0;
@@ -420,81 +377,7 @@ int babs_slam::log_odds_to_prob(float logOdds) {
 
 
 
-// Testing code
-
-void sensor_model_test(babs_slam babs) {
-	ROS_INFO("Testing sensor model");
-	for (float i=0; i<11; i+=0.05) {
-		float phit = babs.pHit(i,5);
-		float pshort = babs.pShort(i, 5);
-		float pmax = babs.pMax(i);
-		float prand = babs.pRand(i);
-		ROS_INFO("i=%f, phit=%f, pshort=%f, pmax=%f, prand=%f",i,phit, pshort,pmax,prand);
-	}
-}
-
-void measurement_model_test(babs_slam babs) {
-	ROS_INFO("Testing measurement model");
-	sensor_msgs::LaserScan mt;
-	ros::Time scan_time = ros::Time::now();
-	int num_readings = 5;
-	double laser_frequency = 40;
-	double ranges[num_readings];
-	ranges[0] = 0.15;
-	ranges[1] = 0.21;
-	ranges[2] = 0.25;
-	ranges[3] = 0.21;
-	ranges[4] = 0.15;
-	mt.header.stamp = scan_time;
-	mt.header.frame_id = "laser_frame";
-	mt.angle_min = -1.57;
-	mt.angle_max = 1.57;
-	mt.angle_increment = 3.14 / (num_readings-1);
-	mt.time_increment = (1 / laser_frequency) / (num_readings);
-	mt.range_min = 0.0;
-	mt.range_max = 8.1;
-	mt.ranges.resize(num_readings);
-	for(int i = 0; i < num_readings; ++i){
-		mt.ranges[i] = ranges[i];
-	}
-
-	geometry_msgs::Pose pose;
-	pose.position.x = 2.5;
-	pose.position.y = 1.5;
-	pose.position.z = 0;
-	pose.orientation = babs.convertPlanarPhi2Quaternion(M_PI/2.0);
-
-	nav_msgs::OccupancyGrid map;
-	int data[] = {0,0,0,0,0, 90,0,0,0,90, 0,0,0,0,0, 90,90,0,90,90, 0,0,90,0,0};
-	map.header.stamp = scan_time;
-	map.header.frame_id = "map_frame";
-	map.info.map_load_time = scan_time;
-	map.info.resolution = 0.1;
-	map.info.width = 5;
-	map.info.height = 5;
-	map.data.resize(25);
-	for(int i = 0; i < 25; i++){
-		map.data[i] = data[i];
-	}
-
-	float test = babs.measurementModelMap(mt, pose, map);
-	ROS_INFO("Weight: %f", test);
-}
-
-int main(int argc, char** argv)
-{
 
 
-	ros::init(argc, argv, "babs_slam");
 
-	ros::NodeHandle nh_;
 
-	babs_slam babs(&nh_);
-
-	//sensor_model_test(babs);
-	measurement_model_test(babs);
-
-    ros::spin();
-    return 0;
-
-} 
