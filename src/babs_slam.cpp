@@ -19,14 +19,15 @@ void babs_slam::initializeParticles(){
 	info.height = MAP_MAX_Y;
 
 	geometry_msgs::Pose origin;
-	origin.position.x = -30;
-	origin.position.y = -30;
+	origin.position.x = 0;//-30;
+	origin.position.y = 0;//-30;
 
 	info.origin = origin;
 	ROS_INFO("here");
 	geometry_msgs::Pose p;
-	p.position.x = 0;
-	p.position.y = 0;
+	p.position.x = ROBOT_START_POSE_X;
+	p.position.y = ROBOT_START_POSE_Y;
+	p.orientation = convertPlanarPhi2Quaternion(0);
 	for (int i = 0; i < NUMPARTICLES; i++){
 
 		nav_msgs::OccupancyGrid map;
@@ -54,10 +55,13 @@ void babs_slam::update(){
 		geometry_msgs::Pose p = particles[i].pose;
 		//get new particles
 		geometry_msgs::Pose newpose = last_odom.pose.pose;
+		newpose.position.x = newpose.position.x + ROBOT_START_POSE_X;
+		newpose.position.y = newpose.position.y + ROBOT_START_POSE_Y;
 		particles[i].pose = newpose;
 		//geometry_msgs::Pose newpose = sampleMotionModel(p);
 		//weigh particles
 		//particleWeights.push_back(measurementModelMap(newpose));
+		ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
 		updateMap(particles[i]);
 	}
 	
