@@ -49,7 +49,7 @@ void babs_slam::initializeParticles(){
 //this is the highest level of abstraction for the algorithm
 void babs_slam::update(){
 	ROS_INFO("updating");
-	//THIS IS JUST TESTING---------------------------------------
+	std::vector<particle> newParticles;
 	std::vector<float> particleWeights;
 	//result will update particles
 	for (int i = 0; i < particles.size();i++){

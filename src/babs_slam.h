@@ -30,7 +30,7 @@ public:
 	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
 	double min_dang(double dang);
 
-	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[6]);
+	geometry_msgs::Pose sampleMotionModel(geometry_msgs::Pose pose);
 
 	float measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
 	float imuModel(geometry_msgs::Pose newpose, geometry_msgs::Pose oldpose);
@@ -107,6 +107,15 @@ private:
 	const float MAP_RESOLUTION = 0.2; // meters per cell
 	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
+
+
+	//motion model params
+	const float M0=0.001;
+	const float M1=0.001;
+	const float M2=0.001;
+	const float M3=0.001;
+	const float M4=0.001;
+	const float M5=0.001;
 	  
 
 	void initializeSubscribers();
