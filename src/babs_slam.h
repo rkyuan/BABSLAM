@@ -32,7 +32,7 @@ public:
 
 	geometry_msgs::Pose sampleMotionModel(geometry_msgs::Pose pose);
 
-	float measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
+	float measurementModelMap(geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
 	float imuModel(geometry_msgs::Pose newpose, geometry_msgs::Pose oldpose);
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
@@ -59,7 +59,9 @@ public:
 	//TODO: GPS
 	void gps_callback(const std_msgs::Float64& message_holder);
 
-	void warmCallbacks();
+	bool warmCallbacks();
+
+	double dt = 0.5;// time since last running of SLAM,
 
 private:
 
@@ -76,6 +78,7 @@ private:
 
 	nav_msgs::OccupancyGrid map;
 	nav_msgs::Odometry last_odom;
+	nav_msgs::Odometry last_odom_used;
 	sensor_msgs::LaserScan last_scan;
 	sensor_msgs::Imu last_imu;
 	sensor_msgs::Imu last_imu_used;
@@ -85,11 +88,17 @@ private:
 	ros::Subscriber gps_listener;
 	ros::Subscriber lidar_listener;
 
+	bool encoder_init;
+	bool imu_init;
+	bool lidar_init;
+
+	void updateLastMeasurements();
 
 
 
 
-	const int NUMPARTICLES = 1;
+
+	const int NUMPARTICLES = 10;
 	// Measurement model parameters
 	const float Z_HIT = 0.6;
 	const float Z_SHORT = 0.1;
@@ -105,7 +114,7 @@ private:
 	const float ROBOT_START_POSE_Y = 35;
 	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.2; // meters per cell
-	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
+	const int MAP_OCC_THRESH = 51; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
 
 
@@ -137,7 +146,7 @@ private:
 	bool compareFloats(float a, float b);
 	
 	//TODO use a timer or something instead of hard coding
-	double dt = 0.1;// time since last running of SLAM,
+	
 
 };
 

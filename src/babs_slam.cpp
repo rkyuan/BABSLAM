@@ -49,27 +49,38 @@ void babs_slam::initializeParticles(){
 //this is the highest level of abstraction for the algorithm
 void babs_slam::update(){
 	ROS_INFO("updating");
-	std::vector<particle> newParticles;
 	std::vector<float> particleWeights;
+	
 	//result will update particles
 	for (int i = 0; i < particles.size();i++){
-		geometry_msgs::Pose p = particles[i].pose;
+		;
+		geometry_msgs::Pose oldpose = particles[i].pose;
 		//get new particles
-		geometry_msgs::Pose newpose = last_odom.pose.pose;
-		newpose.position.x = newpose.position.x + ROBOT_START_POSE_X;
-		newpose.position.y = newpose.position.y + ROBOT_START_POSE_Y;
+		geometry_msgs::Pose newpose;
+		newpose = sampleMotionModel(oldpose);
+		
 		particles[i].pose = newpose;
-		//geometry_msgs::Pose newpose = sampleMotionModel(p);
+		
 		//weigh particles
-		//float weight = 1;
-		//weight *= measurementModelMap(newpose)
-		//weight *= imu_model(newpose,pose)
-		//particleWeights.push_back(weight);
-		ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
+		float weight = 1;
+		weight *= measurementModelMap(newpose,particles[i].map);
+		
+		float w2 = imuModel(newpose,oldpose);
+		weight *= w2;
+		
+		particleWeights.push_back(weight);
+
+		//ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
 		updateMap(particles[i]);
 	}
+
+	updateLastMeasurements();
+
 	
-	//resample(particleWeights);
+	resample(particleWeights);
+	
+	map_publisher.publish(particles[0].map);
+	
 }
 
 
@@ -79,10 +90,12 @@ void babs_slam::resample(std::vector<float> weights){
 		//add up the size of all the weights
 		total_weight+= weights[i];
 	}
+	
 	std::vector<float> samples;
 	for (int i = 0; i < NUMPARTICLES; i++){
 		//take a bunch of random numbers in the range of the weights
 		samples.push_back(rand()/RAND_MAX*total_weight);
+
 	}
 	std::sort(samples.begin(),samples.end());
 	std::vector<particle> newParticles;

@@ -5,6 +5,10 @@ void babs_slam::initializeSubscribers(){
 	imu_listener= nh_.subscribe("/imu",1,&babs_slam::imu_callback,this);
 	gps_listener= nh_.subscribe("/gps_fix",1,&babs_slam::gps_callback,this);
 	lidar_listener= nh_.subscribe("/scan",1,&babs_slam::lidar_callback,this);
+
+	encoder_init =false;
+	imu_init=false;
+	lidar_init=false;
 }
 
 void babs_slam::initializePublishers(){
@@ -12,28 +16,34 @@ void babs_slam::initializePublishers(){
 }
 
 
-void babs_slam::warmCallbacks(){
+bool babs_slam::warmCallbacks(){
 	last_imu_used = last_imu;
+	last_odom_used = last_odom;
 	//also gps stuff
+	return encoder_init && imu_init && lidar_init;
+}
+
+void babs_slam::updateLastMeasurements(){
+	last_imu_used = last_imu;
+	last_odom_used = last_odom;
 }
 
 
 
 void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
 
-	double x = odom_value.pose.pose.position.x;
-	double y = odom_value.pose.pose.position.y;
 
 	last_odom = odom_value;
 
-	//TODO do something with the odom values
-	ROS_INFO("x,y from odom: %f, %f", x,y);
+
+	encoder_init = true;
 
 }
 
 void babs_slam::imu_callback(const sensor_msgs::Imu& imu_data){
 
 	last_imu = imu_data;
+	imu_init = true;
 
 }
 
@@ -44,6 +54,7 @@ void babs_slam::gps_callback(const std_msgs::Float64& message_holder){
 void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 
 	last_scan = laser_scan;
+	lidar_init = true;
 
 	// //tricking the map updater;
 	// for (int i = 0; i <= (last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment; i++){
