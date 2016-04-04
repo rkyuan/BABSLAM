@@ -55,9 +55,41 @@ void babs_slam::update(){
 		geometry_msgs::Pose p = particles[i].pose;
 		//get new particles
 		geometry_msgs::Pose newpose = last_odom.pose.pose;
-		newpose.position.x = newpose.position.x + ROBOT_START_POSE_X;
+		newpose.position.x = newpose.position.x; + ROBOT_START_POSE_X;
 		newpose.position.y = newpose.position.y + ROBOT_START_POSE_Y;
 		particles[i].pose = newpose;
+
+		if (i == 0) {
+
+			ROS_INFO("broadcasting transform");
+
+
+			geometry_msgs::Quaternion odom_quat = newpose.orientation;
+
+			//publish the transform over tf
+			geometry_msgs::TransformStamped odom_trans;
+			odom_trans.header.stamp = ros::Time::now();
+//			odom_trans.header.frame_id = "base_laser1_link";
+//			odom_trans.child_frame_id = "base_link";
+
+			odom_trans.header.frame_id = "base_laser1_link";
+			odom_trans.child_frame_id = "map_frame";
+
+//			odom_trans.header.frame_id = "map_frame";
+//			odom_trans.child_frame_id = "base_laser1_link";
+
+			odom_trans.transform.translation.x = newpose.position.x;
+			odom_trans.transform.translation.y = newpose.position.y - ROBOT_START_POSE_Y;
+			odom_trans.transform.translation.z = 0.0;
+			odom_trans.transform.rotation = odom_quat;
+
+			//send the transform
+			odom_broadcaster.sendTransform(odom_trans);
+
+		}
+
+
+
 		//geometry_msgs::Pose newpose = sampleMotionModel(p);
 		//weigh particles
 		//particleWeights.push_back(measurementModelMap(newpose));

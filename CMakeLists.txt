@@ -45,7 +45,7 @@ cs_add_executable(babslam_main src/babslam_main.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 # target_link_library(example my_lib)
-target_link_libraries(babslam_main babs_slam_lib)
+target_link_libraries(babslam_main babs_slam_lib ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

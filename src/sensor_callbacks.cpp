@@ -8,7 +8,9 @@ void babs_slam::initializeSubscribers(){
 }
 
 void babs_slam::initializePublishers(){
+
 	map_publisher = nh_.advertise<nav_msgs::OccupancyGrid>("/map", 1, true);
+
 }
 
 
