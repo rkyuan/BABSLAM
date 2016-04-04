@@ -65,34 +65,43 @@ void babs_slam::update(){
 		
 		
 
-// 		if (i == 0) {
+		if (i == 0) {
 
-// 			ROS_INFO("broadcasting transform");
+			ROS_INFO("broadcasting transform");
 
 
-// 			geometry_msgs::Quaternion odom_quat = newpose.orientation;
+			geometry_msgs::Quaternion odom_quat = newpose.orientation;
+			double phi = convertPlanarQuat2Phi(odom_quat);
 
-// 			//publish the transform over tf
-// 			geometry_msgs::TransformStamped odom_trans;
-// 			odom_trans.header.stamp = ros::Time::now();
-// //			odom_trans.header.frame_id = "base_laser1_link";
-// //			odom_trans.child_frame_id = "base_link";
+			//publish the transform over tf
+			geometry_msgs::TransformStamped odom_trans;
+			odom_trans.header.stamp = ros::Time::now();
+			//			odom_trans.header.frame_id = "base_laser1_link";
+			//			odom_trans.child_frame_id = "base_link";
 
-// 			odom_trans.header.frame_id = "base_laser1_link";
-// 			odom_trans.child_frame_id = "map_frame";
+			odom_trans.header.frame_id = "base_laser1_link";
+			odom_trans.child_frame_id = "map_frame";
 
-// //			odom_trans.header.frame_id = "map_frame";
-// //			odom_trans.child_frame_id = "base_laser1_link";
+			//			odom_trans.header.frame_id = "map_frame";
+			//			odom_trans.child_frame_id = "base_laser1_link";
 
-// 			odom_trans.transform.translation.x = newpose.position.x;
-// 			odom_trans.transform.translation.y = newpose.position.y - ROBOT_START_POSE_Y;
-// 			odom_trans.transform.translation.z = 0.0;
-// 			odom_trans.transform.rotation = odom_quat;
+			double x = newpose.position.x;
+			double y = newpose.position.y;
 
-// 			//send the transform
-// 			odom_broadcaster.sendTransform(odom_trans);
+			ROS_INFO("x,y is %f %f", x, y);
 
-// 		}
+			double angle = 2*M_PI - phi;
+
+			odom_trans.transform.translation.x = -x*cos(angle) + y*sin(angle);
+			odom_trans.transform.translation.y = -x*sin(angle) - y*cos(angle);
+			odom_trans.transform.translation.z = 0.0;
+
+			odom_trans.transform.rotation = convertPlanarPhi2Quaternion(-phi);
+
+			//send the transform
+			odom_broadcaster.sendTransform(odom_trans);
+
+		}
 
 
 
