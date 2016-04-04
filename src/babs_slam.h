@@ -104,7 +104,7 @@ private:
 	const float ROBOT_START_POSE_X = 10;
 	const float ROBOT_START_POSE_Y = 35;
 	const float ROBOT_START_ORIENTATION = 0;
-	const float MAP_RESOLUTION = 0.1; // meters per cell
+	const float MAP_RESOLUTION = 0.2; // meters per cell
 	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
 	const int DEFAULT_VALUE = 50; // map occupancy value by default
 	  

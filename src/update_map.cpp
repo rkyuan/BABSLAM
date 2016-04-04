@@ -77,6 +77,9 @@ void babs_slam::updateMap(particle &p){
 			for (int j = 0; j < coneSlice.size();j++){
 				float priorLogOdds = prob_to_log_odds(DEFAULT_VALUE);//0;//log(priorOcc/(1-priorOcc)); // eq 9.7
 				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.width;
+				if (index >= p.map.info.width*p.map.info.height){
+					continue;
+				}
 				int lOdd = prob_to_log_odds(p.map.data[index]) + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
 				//p.map.data[index] = clip(lOdd,0,100);
 				p.map.data[index] = log_odds_to_prob(lOdd);
