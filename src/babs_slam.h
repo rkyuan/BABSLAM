@@ -102,8 +102,8 @@ private:
 	// Map parameters
 	const int MAP_MAX_X = 500;
 	const int MAP_MAX_Y = 500;
-	const float ROBOT_START_POSE_X = 10;
-	const float ROBOT_START_POSE_Y = 35;
+	const float ROBOT_START_POSE_X = 50;//10;
+	const float ROBOT_START_POSE_Y = 50;//35;
 	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.2; // meters per cell
 	const int MAP_OCC_THRESH = 50; // min occupancy probability to consider a cell occupied
