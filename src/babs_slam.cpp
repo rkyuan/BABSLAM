@@ -126,24 +126,24 @@ void babs_slam::resample(std::vector<float> weights){
 		//add up the size of all the weights
 		total_weight+= weights[i];
 	}
-	
 	std::vector<float> samples;
 	for (int i = 0; i < NUMPARTICLES; i++){
 		//take a bunch of random numbers in the range of the weights
-		samples.push_back(rand()/RAND_MAX*total_weight);
-
+		samples.push_back(static_cast<float>(rand())/(static_cast<float>(RAND_MAX/total_weight)));
+		//samples.push_back(rand()/RAND_MAX*total_weight);
 	}
 	std::sort(samples.begin(),samples.end());
 	std::vector<particle> newParticles;
 	total_weight =  weights[0];
 	int weight_counter = 0;
 	for (int i = 0; i < NUMPARTICLES; i++){
-		if (total_weight>samples[i]){
+		if (total_weight>samples[i] || weight_counter==NUMPARTICLES){
 			newParticles.push_back(particles[weight_counter]);
 		}
 		else{
 			weight_counter ++;
 			total_weight += weights[weight_counter];
+			i--;
 		}
 	}
 	particles = newParticles;
