@@ -65,43 +65,40 @@ void measurement_model_test(babs_slam babs) {
 
 }
 
-void motion_model_test(babs_slam babs) {
-	ROS_INFO("Testing motion model");
+// void motion_model_test(babs_slam babs) {
+// 	ROS_INFO("Testing motion model");
 
-	nav_msgs::Odometry state;
+// 	nav_msgs::Odometry state;
 
-	geometry_msgs::Pose pose;
-	pose.position.x = 2.5;
-	pose.position.y = 1.5;
-	pose.position.z = 0;
-	pose.orientation = babs.convertPlanarPhi2Quaternion(M_PI/2.0);
-	ROS_INFO("Starting pos (%f, %f), orient %f", pose.position.x, pose.position.y, babs.convertPlanarQuat2Phi(pose.orientation));
+// 	geometry_msgs::Pose pose;
+// 	pose.position.x = 2.5;
+// 	pose.position.y = 1.5;
+// 	pose.position.z = 0;
+// 	pose.orientation = babs.convertPlanarPhi2Quaternion(M_PI/2.0);
+// 	ROS_INFO("Starting pos (%f, %f), orient %f", pose.position.x, pose.position.y, babs.convertPlanarQuat2Phi(pose.orientation));
 
-	geometry_msgs::Twist twist;
-	twist.linear.x = 0.1; // forward (in m/s)
-	twist.linear.y = 0;
-	twist.linear.z = 0;
-	twist.angular.x = 0;
-	twist.angular.y = 0;
-	twist.angular.z = M_PI/2; //>0 - left, <0 - right
+// 	geometry_msgs::Twist twist;
+// 	twist.linear.x = 0.1; // forward (in m/s)
+// 	twist.linear.y = 0;
+// 	twist.linear.z = 0;
+// 	twist.angular.x = 0;
+// 	twist.angular.y = 0;
+// 	twist.angular.z = M_PI/2; //>0 - left, <0 - right
 
-	state.pose.pose = pose;
-	state.twist.twist = twist;
+// 	state.pose.pose = pose;
+// 	state.twist.twist = twist;
 
-	double params[] = {0.001, 0.00001, 0.001, 0.00001, 0.001, 0.00001};
+// 	double params[] = {0.001, 0.00001, 0.001, 0.00001, 0.001, 0.00001};
 
-	geometry_msgs::Pose result;
-	result = babs.sampleMotionModel( state, params);
-	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
-	result = babs.sampleMotionModel( state, params);
-	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
-	result = babs.sampleMotionModel( state, params);
-	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
-}
-void update_map_test(babs_slam babs){
-	
-	
-}
+// 	geometry_msgs::Pose result;
+// 	result = babs.sampleMotionModel( state, params);
+// 	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
+// 	result = babs.sampleMotionModel( state, params);
+// 	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
+// 	result = babs.sampleMotionModel( state, params);
+// 	ROS_INFO("Finished pos (%f, %f), orient %f", result.position.x, result.position.y, babs.convertPlanarQuat2Phi(result.orientation));
+// }
+
 
 int main(int argc, char** argv)
 {
@@ -114,11 +111,17 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh_;
 
 	babs_slam babs(&nh_);
-	ROS_INFO("hi");
 	//sensor_model_test(babs);
 	//measurement_model_test(babs);
 	//motion_model_test(babs);
-	ros::Rate naptime(1.0);
+	ros::Rate naptime(2.0);
+
+	for(int i = 0; i < 3; i++){
+		babs.warmCallbacks();
+		ros::spinOnce();
+		naptime.sleep();
+
+	}
 	while(ros::ok()){
 
 		babs.update();

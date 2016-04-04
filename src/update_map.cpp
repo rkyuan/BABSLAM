@@ -31,8 +31,10 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 	result.push_back(init);
 	//ROS_INFO("init pose = %f %f", p.pose.position.x, p.pose.position.y);
 	//ROS_INFO("init point = %d %d", init.x, init.y);
-
-	if (scan.ranges[i]<scan.range_min){
+	float drawdist=scan.ranges[i];
+	if(!std::isfinite(scan.ranges[i])){
+		drawdist = scan.range_max;
+	}else if (scan.ranges[i]<scan.range_min){
 		//ROS_INFO("invalid scan %d %f %f %f", i, scan.range_min,scan.range_max ,scan.ranges[i]);
 
 		return result;
@@ -41,7 +43,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 
 	ROS_INFO("valid scan %f", ang);
 	
-		while(traveled<std::min(scan.ranges[i],scan.range_max)){
+		while(traveled<std::min(drawdist,scan.range_max)){
 			traveled += res;
 			float xloc = (p.pose.position.x-p.map.info.origin.position.x)/p.map.info.resolution;
 
@@ -75,6 +77,9 @@ void babs_slam::updateMap(particle &p){
 			for (int j = 0; j < coneSlice.size();j++){
 				float priorLogOdds = prob_to_log_odds(DEFAULT_VALUE);//0;//log(priorOcc/(1-priorOcc)); // eq 9.7
 				int index = coneSlice[j].x + coneSlice[j].y*p.map.info.width;
+				if (index >= p.map.info.width*p.map.info.height){
+					continue;
+				}
 				int lOdd = prob_to_log_odds(p.map.data[index]) + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
 				//p.map.data[index] = clip(lOdd,0,100);
 				p.map.data[index] = log_odds_to_prob(lOdd);
