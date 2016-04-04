@@ -39,13 +39,18 @@ void babs_slam::lidar_callback(const sensor_msgs::LaserScan& laser_scan){
 
 	last_scan = laser_scan;
 
-	float angle_min = laser_scan.angle_min;
-	float angle_max = laser_scan.angle_max;
-	float angle_increment = laser_scan.angle_increment;
-	float time_increment = laser_scan.time_increment;
-	float scan_time = laser_scan.scan_time;
-	float range_min = laser_scan.range_min;
-	float range_max = laser_scan.range_max;
+	// //tricking the map updater;
+	// for (int i = 0; i <= (last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment; i++){
+	// 	last_scan.ranges[i]=0.0/0.0;
+	// }
+
+	// float angle_min = laser_scan.angle_min;
+	// float angle_max = laser_scan.angle_max;
+	// float angle_increment = laser_scan.angle_increment;
+	// float time_increment = laser_scan.time_increment;
+	// float scan_time = laser_scan.scan_time;
+	// float range_min = laser_scan.range_min;
+	// float range_max = laser_scan.range_max;
 	//laser_scan.ranges;
 	//laser_scan.intensities;
 
