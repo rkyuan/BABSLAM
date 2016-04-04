@@ -46,7 +46,7 @@ bool babs_slam::within_map_bounds(int x, int y) {
 
 // Takes probability 0-100 and returns log odds representation
 float babs_slam::prob_to_log_odds(int prob) {
-	return log(prob/(100-prob));
+	return log(prob/(100-(float)prob));
 }
 
 // Takes log odds representation and returns the probability 0-100

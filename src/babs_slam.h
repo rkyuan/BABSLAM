@@ -109,10 +109,10 @@ private:
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
 	// Map parameters
-	const int MAP_MAX_X = 500;
+	const int MAP_MAX_X = 250;
 	const int MAP_MAX_Y = 500;
-	const float ROBOT_START_POSE_X = 10;
-	const float ROBOT_START_POSE_Y = 35;
+	const float ROBOT_START_POSE_X = 20;
+	const float ROBOT_START_POSE_Y = 15;
 	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.2; // meters per cell
 	const int MAP_OCC_THRESH = 51; // min occupancy probability to consider a cell occupied
@@ -136,7 +136,7 @@ private:
 
 	void updateMap(particle &p);
 	std::vector<point> get_points_in_scan(particle p, sensor_msgs::LaserScan scan,int i);
-	int inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j);
+	float inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j);
 
 	void resample(std::vector<float> weights);
 

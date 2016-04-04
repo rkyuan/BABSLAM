@@ -80,9 +80,16 @@ void babs_slam::updateMap(particle &p){
 				if (index >= p.map.info.width*p.map.info.height){
 					continue;
 				}
-				int lOdd = prob_to_log_odds(p.map.data[index]) + inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
+				float ismAdd = (inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds);
+				//if (ismAdd<0)
+				//	ismAdd *= ((100-p.map.data[index])/100.0);
+				float lOdd = prob_to_log_odds(p.map.data[index]) + ismAdd;
+				// if (p.map.data[index]<75) {
+				// 	lOdd += inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
+				// }
 				//p.map.data[index] = clip(lOdd,0,100);
-				p.map.data[index] = log_odds_to_prob(lOdd);
+				p.map.data[index] = clip(log_odds_to_prob(lOdd),0,100);
+
 		}
 //		return map
 	}
@@ -95,14 +102,14 @@ void babs_slam::updateMap(particle &p){
 
 
 //really cheaty approach
-int babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j){
+float babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vector<point> coneSlice,int j){
 	if (scan.ranges[i]<scan.range_min){
 		return 0;
 	}
 	if (j==coneSlice.size()-1 && scan.ranges[i]<scan.range_max && std::isfinite(scan.ranges[i])){
-		return 1;
+		return 0.4;
 	}
-	else return -1;
+	else return -0.2;
 }
 //lol
 
