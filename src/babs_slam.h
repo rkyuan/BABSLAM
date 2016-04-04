@@ -5,6 +5,7 @@
 #include <geometry_msgs/Pose.h>
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
+#include <tf/transform_broadcaster.h>
 #include <std_msgs/Float64.h> 
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/Imu.h>
@@ -47,7 +48,7 @@ public:
 	int log_odds_to_prob(float logOdds);
 
 	ros::Publisher map_publisher;
-
+	tf::TransformBroadcaster odom_broadcaster;
 
 	void update();
 
