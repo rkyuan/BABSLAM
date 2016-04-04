@@ -28,10 +28,12 @@ public:
 
 	double convertPlanarQuat2Phi(geometry_msgs::Quaternion quaternion);
 	geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi);
+	double min_dang(double dang);
 
 	geometry_msgs::Pose sampleMotionModel(nav_msgs::Odometry state, double params[6]);
 
 	float measurementModelMap(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
+	float imuModel(geometry_msgs::Pose newpose, geometry_msgs::Pose oldpose);
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
 	float pMax(float z);
@@ -57,6 +59,8 @@ public:
 	//TODO: GPS
 	void gps_callback(const std_msgs::Float64& message_holder);
 
+	void warmCallbacks();
+
 private:
 
 
@@ -74,6 +78,7 @@ private:
 	nav_msgs::Odometry last_odom;
 	sensor_msgs::LaserScan last_scan;
 	sensor_msgs::Imu last_imu;
+	sensor_msgs::Imu last_imu_used;
 
 	ros::Subscriber encoder_listener;
 	ros::Subscriber imu_listener;
@@ -108,7 +113,7 @@ private:
 	void initializePublishers();
 	void initializeParticles();
 
-	
+		
 
 	void updateMap(particle &p);
 	std::vector<point> get_points_in_scan(particle p, sensor_msgs::LaserScan scan,int i);

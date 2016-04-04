@@ -31,7 +31,9 @@ src/babs_slam.cpp
 src/update_map.cpp
 src/motion_model.cpp
 src/measurement_model.cpp
-src/sensor_callbacks.cpp)
+src/sensor_callbacks.cpp
+src/imu_model.cpp
+src/util_functions.cpp)
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package

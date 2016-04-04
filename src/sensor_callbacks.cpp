@@ -12,6 +12,12 @@ void babs_slam::initializePublishers(){
 }
 
 
+void babs_slam::warmCallbacks(){
+	last_imu_used = last_imu;
+	//also gps stuff
+}
+
+
 
 void babs_slam::encoder_callback(const nav_msgs::Odometry& odom_value){
 

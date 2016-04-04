@@ -114,11 +114,17 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh_;
 
 	babs_slam babs(&nh_);
-	ROS_INFO("hi");
 	//sensor_model_test(babs);
 	//measurement_model_test(babs);
 	//motion_model_test(babs);
-	ros::Rate naptime(1.0);
+	ros::Rate naptime(2.0);
+
+	for(int i = 0; i < 3; i++){
+		babs.warmCallbacks();
+		ros::spinOnce();
+		naptime.sleep();
+
+	}
 	while(ros::ok()){
 
 		babs.update();
