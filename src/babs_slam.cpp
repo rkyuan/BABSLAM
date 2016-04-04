@@ -20,14 +20,14 @@ void babs_slam::initializeParticles(){
 	info.height = MAP_MAX_Y;
 
 	geometry_msgs::Pose origin;
-	origin.position.x = 0;//-30;
-	origin.position.y = 0;//-30;
+	origin.position.x = -1.0*ROBOT_START_POSE_X;//-30;
+	origin.position.y = -1.0*ROBOT_START_POSE_Y;//-30;
 
 	info.origin = origin;
 	ROS_INFO("here");
 	geometry_msgs::Pose p;
-	p.position.x = ROBOT_START_POSE_X;
-	p.position.y = ROBOT_START_POSE_Y;
+	p.position.x = 0;
+	p.position.y = 0;
 	p.orientation = convertPlanarPhi2Quaternion(0);
 	for (int i = 0; i < NUMPARTICLES; i++){
 
