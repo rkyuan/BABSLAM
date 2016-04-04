@@ -99,19 +99,19 @@ private:
 
 
 
-	const int NUMPARTICLES = 10;
+	const int NUMPARTICLES = 15;
 	// Measurement model parameters
-	const float Z_HIT = 0.6;
-	const float Z_SHORT = 0.1;
+	const float Z_HIT = 0.65;
+	const float Z_SHORT = 0.05;
 	const float Z_MAX = 0.1;
-	const float Z_RAND = 0.2;
-	const float STD_HIT = 0.05;
+	const float Z_RAND = 0.4;
+	const float STD_HIT = 0.15;
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
 	// Map parameters
-	const int MAP_MAX_X = 250;
-	const int MAP_MAX_Y = 500;
-	const float ROBOT_START_POSE_X = 20;
+	const int MAP_MAX_X = 270;
+	const int MAP_MAX_Y = 400;
+	const float ROBOT_START_POSE_X = 37;
 	const float ROBOT_START_POSE_Y = 15;
 	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.2; // meters per cell
@@ -120,12 +120,12 @@ private:
 
 
 	//motion model params
-	const float M0=0.001;
-	const float M1=0.001;
-	const float M2=0.001;
-	const float M3=0.001;
-	const float M4=0.001;
-	const float M5=0.001;
+	const float M0=0.1;
+	const float M1=0.1;
+	const float M2=0.1;
+	const float M3=0.1;
+	const float M4=0.1;
+	const float M5=0.1;
 	  
 
 	void initializeSubscribers();

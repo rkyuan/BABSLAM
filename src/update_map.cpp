@@ -88,7 +88,7 @@ void babs_slam::updateMap(particle &p){
 				// 	lOdd += inverseSensorModel(last_scan,i,coneSlice,j) - priorLogOdds;
 				// }
 				//p.map.data[index] = clip(lOdd,0,100);
-				p.map.data[index] = clip(log_odds_to_prob(lOdd),0,100);
+				p.map.data[index] = clip(log_odds_to_prob(lOdd),3,100);
 
 		}
 //		return map
@@ -107,7 +107,7 @@ float babs_slam::inverseSensorModel(sensor_msgs::LaserScan scan,int i,std::vecto
 		return 0;
 	}
 	if (j==coneSlice.size()-1 && scan.ranges[i]<scan.range_max && std::isfinite(scan.ranges[i])){
-		return 0.4;
+		return 0.7;
 	}
 	else return -0.2;
 }

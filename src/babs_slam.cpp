@@ -59,7 +59,6 @@ void babs_slam::update(){
 
 		geometry_msgs::Pose newpose;
 		newpose = sampleMotionModel(oldpose);
-		
 		particles[i].pose = newpose;
 		
 		
@@ -104,7 +103,7 @@ void babs_slam::update(){
 		}
 
 
-
+		updateMap(particles[i]);
 
 		//weigh particles
 		float weight = 1;
@@ -116,7 +115,7 @@ void babs_slam::update(){
 		particleWeights.push_back(weight);
 
 		//ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
-		updateMap(particles[i]);
+		
 	}
 
 	updateLastMeasurements();
@@ -124,7 +123,7 @@ void babs_slam::update(){
 	
 	resample(particleWeights);
 	
-	map_publisher.publish(particles[0].map);
+	map_publisher.publish(particles[(rand()%(int)(NUMPARTICLES))].map);
 	
 }
 
@@ -134,6 +133,7 @@ void babs_slam::resample(std::vector<float> weights){
 	for (int i = 0; i < NUMPARTICLES; i ++){
 		//add up the size of all the weights
 		total_weight+= weights[i];
+		//ROS_INFO("x: %f y: %f weight: %f", particles[i].pose.position.x, particles[i].pose.position.y, weights[i]);
 	}
 	std::vector<float> samples;
 	for (int i = 0; i < NUMPARTICLES; i++){
@@ -148,6 +148,7 @@ void babs_slam::resample(std::vector<float> weights){
 	for (int i = 0; i < NUMPARTICLES; i++){
 		if (total_weight>samples[i] || weight_counter==NUMPARTICLES){
 			newParticles.push_back(particles[weight_counter]);
+			ROS_INFO("resample %d", weight_counter);
 		}
 		else{
 			weight_counter ++;
