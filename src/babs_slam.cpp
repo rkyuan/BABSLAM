@@ -20,14 +20,14 @@ void babs_slam::initializeParticles(){
 	info.height = MAP_MAX_Y;
 
 	geometry_msgs::Pose origin;
-	origin.position.x = 0;//-30;
-	origin.position.y = 0;//-30;
+	origin.position.x = -1.0*ROBOT_START_POSE_X;//-30;
+	origin.position.y = -1.0*ROBOT_START_POSE_Y;//-30;
 
 	info.origin = origin;
 	ROS_INFO("here");
 	geometry_msgs::Pose p;
-	p.position.x = ROBOT_START_POSE_X;
-	p.position.y = ROBOT_START_POSE_Y;
+	p.position.x = 0;
+	p.position.y = 0;
 	p.orientation = convertPlanarPhi2Quaternion(0);
 	for (int i = 0; i < NUMPARTICLES; i++){
 
@@ -49,16 +49,21 @@ void babs_slam::initializeParticles(){
 //this is the highest level of abstraction for the algorithm
 void babs_slam::update(){
 	ROS_INFO("updating");
-	std::vector<particle> newParticles;
 	std::vector<float> particleWeights;
+	
 	//result will update particles
 	for (int i = 0; i < particles.size();i++){
-		geometry_msgs::Pose p = particles[i].pose;
+		
+		geometry_msgs::Pose oldpose = particles[i].pose;
 		//get new particles
-		geometry_msgs::Pose newpose = last_odom.pose.pose;
-		newpose.position.x = newpose.position.x; + ROBOT_START_POSE_X;
-		newpose.position.y = newpose.position.y + ROBOT_START_POSE_Y;
+
+		geometry_msgs::Pose newpose;
+		newpose = sampleMotionModel(oldpose);
+		
 		particles[i].pose = newpose;
+		
+		
+		
 
 		if (i == 0) {
 
@@ -71,14 +76,14 @@ void babs_slam::update(){
 			//publish the transform over tf
 			geometry_msgs::TransformStamped odom_trans;
 			odom_trans.header.stamp = ros::Time::now();
-//			odom_trans.header.frame_id = "base_laser1_link";
-//			odom_trans.child_frame_id = "base_link";
+			//			odom_trans.header.frame_id = "base_laser1_link";
+			//			odom_trans.child_frame_id = "base_link";
 
 			odom_trans.header.frame_id = "base_laser1_link";
 			odom_trans.child_frame_id = "map_frame";
 
-//			odom_trans.header.frame_id = "map_frame";
-//			odom_trans.child_frame_id = "base_laser1_link";
+			//			odom_trans.header.frame_id = "map_frame";
+			//			odom_trans.child_frame_id = "base_laser1_link";
 
 			double x = newpose.position.x;
 			double y = newpose.position.y;
@@ -100,17 +105,27 @@ void babs_slam::update(){
 
 
 
-		//geometry_msgs::Pose newpose = sampleMotionModel(p);
+
 		//weigh particles
-		//float weight = 1;
-		//weight *= measurementModelMap(newpose)
-		//weight *= imu_model(newpose,pose)
-		//particleWeights.push_back(weight);
-		ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
+		float weight = 1;
+		weight *= measurementModelMap(newpose,particles[i].map);
+		
+		float w2 = imuModel(newpose,oldpose);
+		weight *= w2;
+		
+		particleWeights.push_back(weight);
+
+		//ROS_INFO("particle pose %f %f", particles[i].pose.position.x, particles[i].pose.position.y);
 		updateMap(particles[i]);
 	}
+
+	updateLastMeasurements();
+
 	
-	//resample(particleWeights);
+	resample(particleWeights);
+	
+	map_publisher.publish(particles[0].map);
+	
 }
 
 
@@ -123,19 +138,21 @@ void babs_slam::resample(std::vector<float> weights){
 	std::vector<float> samples;
 	for (int i = 0; i < NUMPARTICLES; i++){
 		//take a bunch of random numbers in the range of the weights
-		samples.push_back(rand()/RAND_MAX*total_weight);
+		samples.push_back(static_cast<float>(rand())/(static_cast<float>(RAND_MAX/total_weight)));
+		//samples.push_back(rand()/RAND_MAX*total_weight);
 	}
 	std::sort(samples.begin(),samples.end());
 	std::vector<particle> newParticles;
 	total_weight =  weights[0];
 	int weight_counter = 0;
 	for (int i = 0; i < NUMPARTICLES; i++){
-		if (total_weight>samples[i]){
+		if (total_weight>samples[i] || weight_counter==NUMPARTICLES){
 			newParticles.push_back(particles[weight_counter]);
 		}
 		else{
 			weight_counter ++;
 			total_weight += weights[weight_counter];
+			i--;
 		}
 	}
 	particles = newParticles;

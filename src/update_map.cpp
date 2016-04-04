@@ -69,7 +69,7 @@ std::vector<point> babs_slam::get_points_in_scan(particle p, sensor_msgs::LaserS
 
 void babs_slam::updateMap(particle &p){
 	//for each scan point
-	ROS_INFO("updating map %f", (last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment);
+	//ROS_INFO("updating map %f", (last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment);
 	for (int i = 0;i<=(last_scan.angle_max-last_scan.angle_min)/last_scan.angle_increment;i++) {
 		std::vector<point> coneSlice = get_points_in_scan(p,last_scan,i);
 		//for each point in scan
@@ -86,7 +86,7 @@ void babs_slam::updateMap(particle &p){
 		}
 //		return map
 	}
-	map_publisher.publish(p.map);
+	//map_publisher.publish(p.map);
 }
 
 //float inverseSensorModel
