@@ -33,14 +33,17 @@ public:
 
 	geometry_msgs::Pose sampleMotionModel(geometry_msgs::Pose pose);
 
-	float measurementModelMap(geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
+	float measurementModelMap(geometry_msgs::Pose pose, nav_msgs::OccupancyGrid &map);
+	float raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid &map);
+	sensor_msgs::LaserScan raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid &map);
+
 	float imuModel(geometry_msgs::Pose newpose, geometry_msgs::Pose oldpose);
 	float pHit(float z, float trueZ);
 	float pShort(float z, float trueZ);
 	float pMax(float z);
 	float pRand(float z);
-	sensor_msgs::LaserScan raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map);
-	float raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map);
+	
+	
 
 	int map_get_value(nav_msgs::OccupancyGrid map, int x, int y);
 	bool within_map_bounds(int x, int y);
@@ -99,7 +102,7 @@ private:
 
 
 
-	const int NUMPARTICLES = 15;
+	const int NUMPARTICLES = 20;
 	// Measurement model parameters
 	const float Z_HIT = 0.65;
 	const float Z_SHORT = 0.05;
@@ -109,10 +112,10 @@ private:
 	const float L_SHORT = 0.1;
 	const float MAX_LIDAR_RANGE = 8.1;
 	// Map parameters
-	const int MAP_MAX_X = 270;
-	const int MAP_MAX_Y = 400;
-	const float ROBOT_START_POSE_X = 37;
-	const float ROBOT_START_POSE_Y = 15;
+	const int MAP_MAX_X = 300;
+	const int MAP_MAX_Y = 270;
+	const float ROBOT_START_POSE_X = 6;
+	const float ROBOT_START_POSE_Y = 30;
 	const float ROBOT_START_ORIENTATION = 0;
 	const float MAP_RESOLUTION = 0.2; // meters per cell
 	const int MAP_OCC_THRESH = 51; // min occupancy probability to consider a cell occupied

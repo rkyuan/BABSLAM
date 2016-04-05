@@ -2,7 +2,7 @@
 
 // Table 6.1 from the book
 // Not sure about other sensors. We could probably just use Gaussians to model it.
-float babs_slam::measurementModelMap(geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
+float babs_slam::measurementModelMap(geometry_msgs::Pose pose, nav_msgs::OccupancyGrid &map) {
 
 	sensor_msgs::LaserScan mt = last_scan;
 	float result = 1;
@@ -74,7 +74,7 @@ float babs_slam::pRand(float z) {
 }
 
 // Simulates LIDAR scan and modifies the ranges[] array of the input scan
-sensor_msgs::LaserScan babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid map) {
+sensor_msgs::LaserScan babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_msgs::Pose pose, nav_msgs::OccupancyGrid &map) {
 	//get x0,y0 from pose
 	//ROS_INFO("am here0");
 	double x0 = (pose.position.x - map.info.origin.position.x)/MAP_RESOLUTION;
@@ -99,7 +99,7 @@ sensor_msgs::LaserScan babs_slam::raytrace(sensor_msgs::LaserScan mt, geometry_m
 
 // Returns distance to the first obstacle between (x0,y0) and (x1,y1)
 // http://playtechs.blogspot.com/2007/03/raytracing-on-grid.html
-float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid map) {
+float babs_slam::raytrace(double x0, double y0, double x1, double y1, nav_msgs::OccupancyGrid &map) {
 	// x0=x0/MAP_RESOLUTION;
 	// y0=y0/MAP_RESOLUTION;
 	// x1=x1/MAP_RESOLUTION;
